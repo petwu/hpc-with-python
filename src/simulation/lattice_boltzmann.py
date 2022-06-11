@@ -17,6 +17,8 @@ class LatticeBoltzmann:
                  Y: int,
                  omega: float = 1.,
                  init_pdf: np.array = None,
+                 init_density: np.array = None,
+                 init_velocity: np.array = None,
                  plot: bool | str = None,
                  plot_width: int = 200,
                  plot_stages: list[tuple[int, int]] = None,
@@ -32,8 +34,16 @@ class LatticeBoltzmann:
         omega : float
             the rate at which the system is pushed towards the equilibrium: ω=1/τ
 
-        init_pdf : numpy.array
-            Initial values for the probability density function (pdf). Must have the shape ``(9, Y, X)``.
+        init_pdf, init_density, init_velocity : numpy.array
+            Initial values for the probability density function (pdf), density field or velocity field.
+            At least one of them is required. The pdf and density/velocity values are mutually exclusive,
+            i.e. if the pdf is specified, the density and velocity must not be specified, and if the pdf
+            is not specified, the density and/or velocity must be specified.
+
+            The matrices/tensors must match the lattice dimensions, therefore they need to have the following shape:
+            - ``init_pdf``: ``(9, Y, X)``
+            - ``init_density``: ``(Y, X)``
+            - ``init_velocity``: ``(2, Y, X)``
 
         plot : bool|"once"
             Whether to call ``matplotlib.pyplot.show()`` in order to show a plot.
@@ -58,10 +68,19 @@ class LatticeBoltzmann:
             Defaults to ``True`` inside Jupyter/IPython and ``True`` otherwise.
         """
 
+        # parameter checks
+        if not isinstance(omega, int | float) or not 0 < omega < 2:
+            raise ValueError("for a stable simulation, reasonable values for omega should be in the interval (0, 2)")
+        if init_pdf is None and init_density is None and init_velocity is None:
+            raise ValueError("at least one of init_pdf/init_density/init_velocity must be provided")
+        elif init_pdf is not None and (init_density is not None or init_velocity is not None):
+            raise ValueError("init_pdf and init_density/init_velocity arguments are mutually exclusive")
+
         # omega
         self._omega = omega
 
         # channel weights and velocities/directions
+        self._weight_c = np.array([4. / 9.] + 4*[1. / 9.] + 4*[1. / 36.])
         self._channel_ca = np.array([
             # note: grid origin is in the top-left corner
             # [Y, X] shift
@@ -84,7 +103,7 @@ class LatticeBoltzmann:
         density_shape = (Y, X)
         self._shape = (Y, X)
 
-        # initialize probability density function (pdf)
+        # initialize probability density function (pdf) [1/2]
         if init_pdf is not None:
             assert init_pdf.shape == pdf_shape, \
                 f"init_pdf has the wrong shape: is {init_pdf.shape}, should be {pdf_shape}"
@@ -94,14 +113,30 @@ class LatticeBoltzmann:
         self._pdf_eq_cij = np.zeros(pdf_shape)  # equilibrium
 
         # initialize density and mass
-        self._density_ij = np.zeros(density_shape)
-        self._initial_mass = None
-        self.update_density()
-        self._initial_mass = self.mass
+        if init_density is not None:
+            assert init_density.shape == density_shape, \
+                f"init_density has the wrong shape: is {init_density.shape}, should be {density_shape}"
+            self._density_ij = init_density
+            self._initial_mass = self.mass
+        else:
+            self._density_ij = np.zeros(density_shape)
+            self._initial_mass = None
+            self.update_density()
+            self._initial_mass = self.mass
 
         # initialize velocity
-        self._velocity_aij = np.zeros(velocity_shape)
-        self.update_velocity()
+        if init_velocity is not None:
+            assert init_velocity.shape == velocity_shape, \
+                f"init_velocity has the wrong shape: is {init_velocity.shape}, should be {velocity_shape}"
+            self._velocity_aij = init_velocity
+        else:
+            self._velocity_aij = np.zeros(velocity_shape)
+            self.update_velocity()
+
+        # initialize pdf for given density/velocity [2/2]
+        if init_pdf is None and (init_density is not None or init_velocity is not None):
+            self.update_equilibrium()
+            self._pdf_cij = self._pdf_eq_cij
 
         # initialize density boundaries
         self._max_density = np.max(np.sum(self._pdf_cij, axis=0))
@@ -167,6 +202,21 @@ class LatticeBoltzmann:
         self._velocity_aij = np.einsum("cij,ca->aij", self._pdf_cij, self._channel_ca) / \
             np.maximum(self._density_ij, 1e-12)
 
+    def update_equilibrium(self):
+        assert self._density_ij.shape == self._velocity_aij.shape[1:], \
+            f"some calculation messed up the density or velocity shape"
+
+        # helper variables
+        # (9, Y, X) <- (Y, X, 2) @ (2, 9)
+        vel_dot_c = (self._velocity_aij.T @ self._channel_ca.T).T
+        # (Y, X) <- (2, Y, X)
+        v_norm2 = np.linalg.norm(self._velocity_aij, axis=0) ** 2
+
+        # local equilibrium distribution function approximation
+        # (9, Y, X) <- (9, 1, 1) * (1, Y, X) * ((9, Y, X) + (9, Y, X) - (1, Y, X))
+        self._pdf_eq_cij = self._weight_c[..., np.newaxis, np.newaxis] * self._density_ij[np.newaxis, ...] * (
+            1. + 3. * vel_dot_c + 4.5 * vel_dot_c ** 2 - 1.5 * v_norm2[np.newaxis, ...])
+
     def streaming_step(self):
         """
         Implements the streaming operator (l.h.s.) of the BTE.
@@ -175,6 +225,29 @@ class LatticeBoltzmann:
         for i in range(9):
             # for each channel, shift/roll by the corresponding direction from _channel_ca
             self._pdf_cij[i] = np.roll(self._pdf_cij[i], shift=self._channel_ca[i], axis=(0, 1))
+
+    def collision_step(self):
+        """
+        Implements the collision operator (r.h.s.) of the BTE.
+        """
+        self.update_density()
+        self.update_velocity()
+        self.update_equilibrium()
+        self._pdf_cij += (self._pdf_eq_cij - self._pdf_cij) * self._omega
+
+    def step(self, n: int = 1):
+        """
+        Run one or multiple simulation steps.
+
+        Parameters
+        ----------
+        n : int
+            The number of simulation steps.
+        """
+        for _ in range(n):
+            self.streaming_step()
+            self.collision_step()
+            self.update_plot()
 
     def _init_plot(self):
         """
