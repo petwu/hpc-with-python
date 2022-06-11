@@ -8,6 +8,7 @@ with Python_ at the University of Freiburg in the summer semester 2022.
 
 - [Setup](#setup)
 - [Milestones](#milestones)
+- [Tests](#tests)
 
 ## Setup
 
@@ -21,3 +22,19 @@ pip3 install -r requirements.txt
 Implementation of the milestones is located in [src/milestones](src/milestones).
 They are implemented as [Jupyter](https://jupyter.org) notebooks and exported as
 HTML.
+
+## Tests
+
+Run all unit tests in the `test/` directory using the following command:
+```sh
+python -m unittest
+```
+The following naming conventions need to be applied in order for the
+[test discovery](https://docs.python.org/3/library/unittest.html#unittest-test-discovery)
+to work:
+- the directory must be named `test*`
+- every (sub)directory need to be a package, i.e. they need a `__init__.py` file
+- all filenames need to match `test*.py` and must be valid identifiers, e.g.
+  `test_foo.py` but not `test-foo.py`
+- all classes must extend `unittest.TestCase`
+- all test case method names must match `test*`
