@@ -56,8 +56,9 @@ class LatticeBoltzmann:
             # else, because otherwise for some unknown reason Pylance marks the code after this class as unreachable
             pass
 
-        # omega
+        # omega, viscosity
         self._omega = omega
+        self._viscosity = 1/3 * (1/self._omega - 0.5)
 
         # channel weights and velocities/directions
         self._weight_c = np.array([4. / 9.] + 4*[1. / 9.] + 4*[1. / 36.])
@@ -153,7 +154,7 @@ class LatticeBoltzmann:
         return self._shape
 
     @property
-    def density(self) -> np.array:
+    def density(self) -> np.ndarray:
         """
         Returns the (Y, X) shaped density field.
         """
@@ -165,6 +166,20 @@ class LatticeBoltzmann:
         Returns the total mass.
         """
         return np.sum(self._density_ij)
+
+    @property
+    def viscosity(self) -> float:
+        """
+        Returns the viscosity value.
+        """
+        return self._viscosity
+
+    @property
+    def velocity(self) -> float:
+        """
+        Returns the (2, Y, X) shaped velocity field.
+        """
+        return self._velocity_aij
 
     @property
     def plot(self) -> DensityPlot:
@@ -253,4 +268,4 @@ class LatticeBoltzmann:
         Update the plot of the density field.
         """
         self.plot.update(self._step_i, self._density_ij)
-            self._step_i += 1
+        self._step_i += 1
