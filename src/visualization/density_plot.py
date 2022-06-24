@@ -97,6 +97,13 @@ class DensityPlot:
                                     size=plt.rcParams["axes.titlesize"],
                                     ha="center", va="top",
                                     transform=self._ax.transAxes)
+        # if only plotting, store a reference to the color mesh and only update the data -> faster
+        # (if we are also animating, then we need to create a separate artist each step anyway)
+        if self._plot and not self._animate:
+            self._pcolormesh = self._ax.pcolormesh(density,
+                                                   vmin=max(self._vmin, 0),
+                                                   vmax=max(self._vmax, 0.01),
+                                                   cmap=plt.cm.Blues)
         # fill plot with initial state
         self.update(step, density)
         if self._plot:
@@ -124,10 +131,15 @@ class DensityPlot:
             self._vmin = min(self._vmin, density.min())
 
         # update heatmap
-        img = self._ax.pcolormesh(density,
-                                  vmin=max(self._vmin, 0),
-                                  vmax=max(self._vmax, 0.01),
-                                  cmap=plt.cm.Blues)
+        if self._animate and self._plot:
+            img = self._ax.pcolormesh(density,
+                                      vmin=max(self._vmin, 0),
+                                      vmax=max(self._vmax, 0.01),
+                                      cmap=plt.cm.Blues)
+        elif self._plot:
+            self._pcolormesh.set_array(density)
+            self._pcolormesh.set_clim(vmin=max(self._vmin, 0),
+                                      vmax=max(self._vmax, 0.01))
         # update title
         # (use _ax.text instead of _ax.set_title, because the title would not get animated)
         title = f"step {step} (x{self._plot_stages.current_step_size})" if step > 0 else "initial state"
