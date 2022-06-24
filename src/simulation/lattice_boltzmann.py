@@ -1,5 +1,7 @@
+from __future__ import annotations
 import numpy as np
-from src.visualization.density_plot import DensityPlot, PlotStages
+import src.boundary as boundary
+import src.visualization as visualization
 
 
 class LatticeBoltzmann:
@@ -15,6 +17,7 @@ class LatticeBoltzmann:
                  init_pdf: np.ndarray = None,
                  init_density: np.ndarray = None,
                  init_velocity: np.ndarray = None,
+                 boundaries: list[boundary.BaseBoundaryCondition] = None,
                  plot: bool | str = None,
                  plot_size: int = 200,
                  plot_stages: list[tuple[int, int]] = None,
@@ -40,6 +43,11 @@ class LatticeBoltzmann:
             - ``init_pdf``: ``(9, Y, X)``
             - ``init_density``: ``(Y, X)``
             - ``init_velocity``: ``(2, Y, X)``
+
+        boundaries : list[boundary.BaseBoundaryCondition]
+            A list of boundary conditions to be applied. All passed objects must inherit and extend the
+            :class:``BaseBoundaryCondition`` class. If no explicit boundary conditions are applied, the streaming
+            operator implicitly implements periodic boundary conditions.
 
         plot, plot_size, plot_stages, animate
             See :class:`DensityPlot`.
@@ -92,6 +100,7 @@ class LatticeBoltzmann:
         else:
             self._pdf_cij = np.zeros(pdf_shape)
         self._pdf_eq_cij = np.zeros(pdf_shape)  # equilibrium
+        self._pdf_pre_cij = np.zeros(pdf_shape)  # boundary handling
 
         # initialize density and mass
         if init_density is not None:
@@ -119,13 +128,22 @@ class LatticeBoltzmann:
             self.update_equilibrium()
             self._pdf_cij = self._pdf_eq_cij
 
+        # initialize boundary handling
+        boundaries = boundaries or []
+        for b in boundaries:
+            b.initialize(self)
+        self._boundaries = {
+            True: [b for b in boundaries if b.before_streaming],
+            False: [b for b in boundaries if not b.before_streaming]
+        }
+
         # initialize plotting
         self._step_i = 0
         min_density = np.min(np.sum(self._pdf_cij, axis=0))
         max_density = np.max(np.sum(self._pdf_cij, axis=0))
-        self._plot = DensityPlot(X, Y,
+        self._plot = visualization.DensityPlot(X, Y,
                                  plot_size=plot_size,
-                                 plot_stages=PlotStages(stages=plot_stages, omega=omega),
+                                               plot_stages=visualization.PlotStages(stages=plot_stages, omega=omega),
                                  vmin=min_density,
                                  vmax=max_density,
                                  plot=plot,
@@ -175,6 +193,28 @@ class LatticeBoltzmann:
         return self._viscosity
 
     @property
+    def pdf(self) -> np.ndarray:
+        """
+        Reference to the probability density function (pdf).
+        """
+        return self._pdf_cij
+
+    @property
+    def pdf_eq(self) -> np.ndarray:
+        """
+        Reference to the equilibrium probability density function (pdf).
+        """
+        return self._pdf_eq_cij
+
+    @property
+    def pdf_pre(self) -> np.ndarray:
+        """
+        Reference to the probability density function (pdf) before the streaming step.
+        This property is intended to be used by boundary handling.
+        """
+        return self._pdf_pre_cij
+
+    @property
     def velocity(self) -> float:
         """
         Returns the (2, Y, X) shaped velocity field.
@@ -182,7 +222,7 @@ class LatticeBoltzmann:
         return self._velocity_aij
 
     @property
-    def plot(self) -> DensityPlot:
+    def plot(self) -> visualization.DensityPlot:
         """
         Reference to the plotting object.
         """
@@ -249,6 +289,12 @@ class LatticeBoltzmann:
         self.update_equilibrium()
         self._pdf_cij += (self._pdf_eq_cij - self._pdf_cij) * self._omega
 
+    def boundary_handling(self, before_streaming: bool):
+        if before_streaming:
+            self._pdf_pre_cij = np.copy(self._pdf_cij)
+        for b in self._boundaries[before_streaming]:
+            b.apply(self)
+
     def step(self, n: int = 1):
         """
         Run one or multiple simulation steps.
@@ -259,7 +305,9 @@ class LatticeBoltzmann:
             The number of simulation steps.
         """
         for _ in range(n):
+            self.boundary_handling(True)
             self.streaming_step()
+            self.boundary_handling(False)
             self.collision_step()
             self.update_plot()
 
