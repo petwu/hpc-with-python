@@ -131,13 +131,16 @@ class DensityPlot:
             self._vmin = min(self._vmin, density.min())
 
         # update heatmap
-        if self._animate and self._plot:
+        if self._animate:
             img = self._ax.pcolormesh(density,
                                       vmin=max(self._vmin, 0),
                                       vmax=max(self._vmax, 0.01),
                                       cmap=plt.cm.Blues)
         elif self._plot:
-            self._pcolormesh.set_array(density)
+            try:
+                self._pcolormesh.set_array(density)
+            except IndexError:
+                pass  # for some reason, this throws an index out of bounds error every now and them
             self._pcolormesh.set_clim(vmin=max(self._vmin, 0),
                                       vmax=max(self._vmax, 0.01))
         # update title
