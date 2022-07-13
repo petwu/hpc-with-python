@@ -14,6 +14,7 @@ class LatticeBoltzmann:
                  X: int,
                  Y: int,
                  omega: float = 1.,
+                 viscosity: float = None,
                  init_pdf: np.ndarray = None,
                  init_density: np.ndarray = None,
                  init_velocity: np.ndarray = None,
@@ -31,7 +32,10 @@ class LatticeBoltzmann:
             Dimensions of the D2Q9 lattice.
 
         omega : float
-            the rate at which the system is pushed towards the equilibrium: ω=1/τ
+            The rate at which the system is pushed towards the equilibrium: ω=1/τ
+
+        viscosity : float
+            The viscosity of the fluid. If specified, overrules the ``omega`` value.
 
         init_pdf, init_density, init_velocity : numpy.array
             Initial values for the probability density function (pdf), density field or velocity field.
@@ -65,6 +69,10 @@ class LatticeBoltzmann:
             pass
 
         # omega, viscosity
+        if viscosity:
+            self._omega = 1 / (3*viscosity + 0.5)
+            self._viscosity = viscosity
+        else:
         self._omega = omega
         self._viscosity = 1/3 * (1/self._omega - 0.5)
 
