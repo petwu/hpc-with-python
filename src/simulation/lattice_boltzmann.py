@@ -172,6 +172,20 @@ class LatticeBoltzmann:
         return self._shape
 
     @property
+    def weight(self) -> np.ndarray:
+        """
+        Returns the vector if channels weights.
+        """
+        return self._weight_c
+
+    @property
+    def channel(self) -> np.ndarray:
+        """
+        Returns the matrix of velocity direction channels.
+        """
+        return self._channel_ca
+
+    @property
     def density(self) -> np.ndarray:
         """
         Returns the (Y, X) shaped density field.
@@ -184,6 +198,13 @@ class LatticeBoltzmann:
         Returns the total mass.
         """
         return np.sum(self._density_ij)
+
+    @property
+    def omega(self) -> float:
+        """
+        Returns the omega value.
+        """
+        return self._omega
 
     @property
     def viscosity(self) -> float:
@@ -237,7 +258,7 @@ class LatticeBoltzmann:
         assert np.min(self._density_ij) >= 0, \
             f"negative densities make no sense: {np.min(self._density_ij)}"
         assert self._initial_mass is None or self._initial_mass - self.mass < 1e-6, \
-            f"the simulation generates/destroys mass: {self._initial_mass - self.mass}"
+            f"the simulation generates/destroys mass: {self.mass - self._initial_mass}"
 
     def update_velocity(self):
         """
@@ -290,8 +311,17 @@ class LatticeBoltzmann:
         self._pdf_cij += (self._pdf_eq_cij - self._pdf_cij) * self._omega
 
     def boundary_handling(self, before_streaming: bool):
+        """
+        Apply all boundary handling methods the lattice was initialized with.
+
+        Parameters
+        ----------
+        before_streaming : bool
+            Specify the kind of boundary handlings to be applied: Those that happen before (``True``) or those that
+            happen after (``False``) the streaming operation.
+        """
         if before_streaming:
-            self._pdf_pre_cij = np.copy(self._pdf_cij)
+            self._pdf_pre_cij = self._pdf_cij.copy()
         for b in self._boundaries[before_streaming]:
             b.apply(self)
 
