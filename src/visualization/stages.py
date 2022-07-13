@@ -33,9 +33,7 @@ class PlotStages:
             # TODO: use omega for the default value
             stages = [(0, 1), (500, 2), (1000, 5), (2000, 10), (10000, 50), (100000, 100), (1000000, 1000)]
         self._stages = stages
-        self._step_size = self._stages[0][1]
-        self._next_plotted_step = self._stages[0][0]
-        self._stages.pop(0)
+        self.reset()
 
     @property
     def current_step_size(self) -> int:
@@ -43,6 +41,31 @@ class PlotStages:
         Gives the step size of the current stage.
         """
         return self._step_size
+
+    def reset(self):
+        """
+        Reset to the first stage.
+        """
+        self._s = 0
+        self._next_plotted_step = self._stages[self._s][0]
+        self._step_size = self._stages[self._s][1]
+
+    def get_step_size(self, i: int) -> int:
+        """
+        Returns the step size for a given step.
+
+        Parameters
+        ----------
+        i : int
+            The considered step.
+        """
+        if self._stages is None:
+            return 1
+
+        for stage in reversed(self._stages):
+            if i >= stage[0]:
+                return stage[1]
+        return self._stages[-1][1]
 
     def is_step_plotted(self, i: int) -> bool:
         """
@@ -63,9 +86,9 @@ class PlotStages:
             return True
 
         # check if we need to proceed to the next stage
-        if len(self._stages) > 0 and i >= self._stages[0][0]:
-            self._step_size = self._stages[0][1]
-            self._stages.pop(0)
+        if self._s < len(self._stages)-1 and i >= self._stages[self._s][0]:
+            self._s += 1
+            self._step_size = self._stages[self._s][1]
 
         # is step plotted according to stage definition?
         if i == self._next_plotted_step:
@@ -75,3 +98,38 @@ class PlotStages:
 
         # all other steps are not plotted
         return False
+
+    def list(self, stop: int) -> list[int]:
+        """
+        List all plotted steps until ``stop``.
+
+        Parameters
+        ----------
+        stop : int
+            The step until where to list (inclusive).
+        """
+        if self._stages is None:
+            return [(i, i) for i in range(stop+1)]
+
+        plotted = []
+        s = 0
+        i = self._stages[s][0]
+        d = self._stages[s][1]
+        while i <= stop:
+            plotted.append(i)
+            i += d
+            if s < len(self._stages)-1 and i >= self._stages[s+1][0]:
+                s += 1
+                d = self._stages[s][1]
+        return plotted
+
+    def enumerate(self, stop: int) -> any:
+        """
+        Enumerate all plotted steps until ``stop``.
+
+        Parameters
+        ----------
+        stop : int
+            The step until where to enumerate (inclusive).
+        """
+        return enumerate(self.list(stop))
