@@ -46,11 +46,11 @@ class PeriodicPressureGradientBoundaryCondition(BaseBoundaryCondition):
             Boundary.RIGHT:  (slice(None),  1),
         }
 
-    def initialize(self, lattice: sim.LatticeBoltzmann):
+    def initialize(self, lattice: sim.LatticeBoltzmann, boundaries: str | Boundary = None):
         """
         Implements the :method:`BaseBoundaryCondition.initialize` method.
         """
-        super().initialize(lattice)
+        super().initialize(lattice, boundaries)
 
         # initialize array of extra nodes with inlet/outlet density
         boundary_size = lattice.Y if self._horizontal else lattice.X

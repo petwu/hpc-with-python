@@ -56,7 +56,7 @@ class BaseBoundaryCondition(abc.ABC):
     Abstract base class for all boundary conditions.
     """
 
-    def __init__(self, boundaries: str|Boundary, before_streaming: bool):
+    def __init__(self, boundaries: str | Boundary, before_streaming: bool):
         """
         Parameters
         ----------
@@ -68,9 +68,8 @@ class BaseBoundaryCondition(abc.ABC):
             Or the equivalent shortcut string ``tb`` would be possible to.
         """
         self._before_streaming = before_streaming
-        self._boundaries_flag = Boundary(boundaries)
-        self._boundaries = [b for b in Boundary if b & self._boundaries_flag]
-        self._initialized = False
+        self._boundaries = Boundary(boundaries)
+        self.__initialized = False
 
         # map each boundary to the indices required for the reflection/back bouncing:
         self._boundary_indices = {
@@ -87,6 +86,12 @@ class BaseBoundaryCondition(abc.ABC):
             # note: slice(None) is equivalent to :
         }
 
+    def __str__(self) -> str:
+        return f"{type(self).__name__.replace('BoundaryCondition', '')}({self.boundaries})"
+
+    def __repr__(self) -> str:
+        return self.__str__()
+
     @property
     def before_streaming(self) -> bool:
         """
@@ -96,16 +101,9 @@ class BaseBoundaryCondition(abc.ABC):
         return self._before_streaming
 
     @property
-    def boundaries_flag(self) -> Boundary:
+    def boundaries(self) -> Boundary:
         """
         The ``boundaries`` value passed to the constructor.
-        """
-        return self._boundaries_flag
-
-    @property
-    def boundaries(self) -> list[Boundary]:
-        """
-        The ``boundaries`` value passed to the constructor as list of single values instead of a or-joined flag.
         """
         return self._boundaries
 
@@ -117,12 +115,27 @@ class BaseBoundaryCondition(abc.ABC):
         """
         return self._boundary_indices
 
-    def initialize(self, lattice: sim.LatticeBoltzmann):
+    def initialize(self, lattice: sim.LatticeBoltzmann, boundaries: str | Boundary = None):
         """
         Initilization method. Can be used e.g. to precompute specific constant values or similar.
-        This should only be executed once.
+        This may only be executed once.
+
+        Parameters
+        ----------
+        lattice : LatticeBoltzmann
+            The concerned lattice instance.
+
+        boundaries : str | Boundary
+            Override the ``boundaries`` parameter passed to the constructor.
+            This may be useful for parallel implementations using MPI.
         """
-        self._initialized = True
+        if self.__initialized:
+            raise RuntimeError(f"{type(self).__name__}.{self.initialize.__name__}() may only be called once")
+
+        if boundaries is not None:
+            self._boundaries = Boundary(boundaries)
+
+        self.__initialized = True
 
     @abc.abstractmethod
     def apply(self, lattice: sim.LatticeBoltzmann):
@@ -134,4 +147,6 @@ class BaseBoundaryCondition(abc.ABC):
         lattice : LatticeBoltzmann
             The concerned lattice instance.
         """
-        pass
+        if not self.__initialized:
+            raise RuntimeError(f"{type(self).__name__}.{self.initialize.__name__}() needs to be called once before " +
+                               f"calling {type(self).__name__}.{self.apply.__name__}()")

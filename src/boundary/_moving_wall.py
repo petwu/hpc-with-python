@@ -33,11 +33,11 @@ class MovingWallBoundaryCondition(BaseBoundaryCondition):
         self._wall_velocity = np.array(wall_velocity)
         self._extrapolate_density = extrapolate_density
 
-    def initialize(self, lattice: sim.LatticeBoltzmann):
+    def initialize(self, lattice: sim.LatticeBoltzmann, boundaries: str | Boundary = None):
         """
         Implements the :method:`BaseBoundaryCondition.initialize` method.
         """
-        super().initialize(lattice)
+        super().initialize(lattice, boundaries)
 
         # precompute constant part of the coefficient: 2 w_i (c_i · U_w) / c_s^2
         # note: c_s=1/√3 is the speed of sound in lattice units
