@@ -20,8 +20,11 @@ pip3 install -r requirements.txt
 ## Milestones
 
 Implementation of the milestones is located in [src/milestones](src/milestones).
-They are implemented as [Jupyter](https://jupyter.org) notebooks and exported as
-HTML.
+Use [milestone.py](milestone.py) in order to run a specific milestone. See
+```sh
+python milestone.py --help
+```
+for usage information.
 
 ## Tests
 
