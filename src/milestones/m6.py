@@ -64,8 +64,7 @@ def main(args: argparse.Namespace):
         args.viscosity = omega_to_viscosity(np.array(args.omega))
         args.oemga = None
     # check reynolds_nr, viscosity, wall_velocity
-    # TODO: what is L in case size_y != size_x?
-    L = args.size_y
+    L = max(args.size_x, args.size_y)
     if args.reynolds_nr and args.viscosity and args.wall_velocity:
         raise ValueError("--reynolds_nr, --viscosity|--omega and --wall_velocity can't be present at the same time")
     elif args.reynolds_nr and args.viscosity:

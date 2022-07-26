@@ -93,8 +93,7 @@ def main(args: argparse.Namespace):
 
 
 def plot_velocity_field(filename: str, args: argparse.Namespace, lattice: sim.LatticeBoltzmann, velocity: np.ndarray):
-    # TODO: what is L in case size_y != size_x?
-    L = args.size_y
+    L = max(args.size_x, args.size_y)
     Re = L * args.wall_velocity / lattice.viscosity
 
     fig, ax = plt.subplots(figsize=(6.8, 6.0), dpi=100)
