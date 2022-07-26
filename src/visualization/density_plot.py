@@ -1,5 +1,5 @@
 from matplotlib import animation, pyplot as plt
-from IPython import display, get_ipython
+from IPython import display
 from .stages import PlotStages
 import numpy as np
 import os
@@ -18,8 +18,8 @@ class DensityPlot:
                  plot_stages: PlotStages = None,
                  vmin: float = None,
                  vmax: float = None,
-                 plot: bool = None,
-                 animate: bool = None):
+                 plot: bool = False,
+                 animate: bool = False):
         """
         X, Y : int
             Dimensions of the density field.
@@ -43,11 +43,8 @@ class DensityPlot:
             If the value is ``once`` instead of a bool, then only the first update is shown.
             This might be useful in Jupyter to show the the initial state and then the final animation.
 
-            Defaults to ``once`` inside Jupyter/IPython and ``True`` otherwise.
-
         animate : bool
             Whether to store each image in order to create an animation.
-            Defaults to ``True`` inside Jupyter/IPython and ``True`` otherwise.
         """
         self._X = X
         self._Y = Y
@@ -55,11 +52,6 @@ class DensityPlot:
         self._plot_stages = plot_stages or PlotStages()
         self._vmin = vmin
         self._vmax = vmax
-
-        if plot is None:
-            plot = "once" if get_ipython() is not None else False
-        if animate is None:
-            animate = get_ipython() is not None
         self._plot = plot
         self._animate = animate
 
@@ -73,11 +65,12 @@ class DensityPlot:
         # plot size
         if self._X >= self._Y:
             w = self._plot_size / 25.4  # mm to inch
-            h = w * (self._Y / self._X) + 1  # width * ratio + 1 for the title
+            h = w * (self._Y / self._X) + 0  # width * ratio + 0 for the title
         else:
-            h = self._plot_size / 25.4 + 1  # mm to inch
-            w = (h-1) * (self._X / self._Y)  # width * ratio + 1 for the title
+            h = self._plot_size / 25.4 + 0  # mm to inch
+            w = (h-0) * (self._X / self._Y)  # width * ratio + 0 for the title
         # create plot figure
+        plt.rcParams['toolbar'] = 'None'  # to prevent https://github.com/matplotlib/matplotlib/issues/22334
         self._figure, self._ax = plt.subplots(figsize=(w, h))
         # square cells
         self._ax.set_aspect("equal", adjustable="box")
@@ -137,10 +130,7 @@ class DensityPlot:
                                       vmax=max(self._vmax, 0.01),
                                       cmap=plt.cm.Blues)
         elif self._plot:
-            try:
-                self._pcolormesh.set_array(density)
-            except IndexError:
-                pass  # for some reason, this throws an index out of bounds error every now and them
+            self._pcolormesh.set_array(density)
             self._pcolormesh.set_clim(vmin=max(self._vmin, 0),
                                       vmax=max(self._vmax, 0.01))
         # update title
@@ -173,12 +163,14 @@ class DensityPlot:
         interval : float
             The delay between frames in seconds.
         """
+        if len(self._images) == 0:
+            raise RuntimeError("no images to animate yet; did you pass animate=True to the constructor?")
         # create animation
         self._title.set_text("")
         return animation.ArtistAnimation(self._figure,
                                          self._images,
                                          interval=interval*1000,
-                                         blit=True,
+                                         blit=False,
                                          repeat=False)
 
     def display_animation(self, autoplay: bool = False, **kwargs):
@@ -201,7 +193,13 @@ class DensityPlot:
             html = re.sub(r"(\n( +\w+) = new Animation\([^)]+\);?)", "\\1\n\\2.play_animation();", html)
         display.display(display.HTML(html))
 
-    def save_plot(self, path: str):
+    def close(self):
+        """
+        Close the plot.
+        """
+        plt.close()
+
+    def save(self, path: str, *args, **kwargs):
         """
         Save the current plot.
 
@@ -209,8 +207,11 @@ class DensityPlot:
         ----------
         path : str
             File path where to save the plot.
+
+        *args, **kwargs
+            Further arguments to :method:`matplotlib.pyplot.savefig`.
         """
         dir = os.path.dirname(path)
         if dir != "":
             os.makedirs(dir, exist_ok=True)
-        plt.savefig(path)
+        plt.savefig(path, *args, **kwargs)

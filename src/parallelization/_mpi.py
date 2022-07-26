@@ -1,8 +1,6 @@
 from __future__ import annotations
 import numpy as np
 import mpi4py.MPI as mpi
-import matplotlib.pyplot as plt
-import matplotlib.ticker as tick
 import src.boundary as bdry
 
 
@@ -73,6 +71,13 @@ class MpiDomain2D:
         The number of MPI processes.
         """
         return self._size
+
+    @property
+    def decomposition(self) -> tuple[int, int]:
+        """
+        The domain decomposition in ``(X, Y)`` direction.
+        """
+        return self._decomp_x, self._decomp_y
 
     @property
     def padding(self) -> np.ndarray:
@@ -336,11 +341,14 @@ class MpiDomain2D:
         filetype.Free()
         file.Close()
 
-    def plot(self, rank: int = 0, *args, **kwargs):
-        # initialize cartesian communicator
-        self._size_x = 4
-        self._size_y = 4
-
+    def get_grid(self, rank: int = 0) -> np.ndarray:
+        """
+        Returns
+        -------
+        numpy.ndarray
+            A 2D array descibing the rank arangement. Axis 0 and 1 represent x and y respectively.
+        """
+        
         # get coordinates and neighbors of current process
         coords = np.array(self._comm.Get_coords(self._rank))
         neighbors = np.array([
@@ -358,7 +366,7 @@ class MpiDomain2D:
 
         if self._rank == rank:
             # fill grid according to the coordinates and neighbors
-            grid = np.ones((self._size_y, self._size_x), dtype=int)*-1
+            grid = np.ones((self._decomp_x, self._decomp_y), dtype=int)*-1
             for r in range(self._size):
                 y, x = all_coords[r]
                 # n - neighbor, x/y - axis, p/m - positive/negative shift
@@ -379,20 +387,4 @@ class MpiDomain2D:
                     assert grid[x, y-1] in [nym, -1]
                     grid[x, y-1] = nym
 
-            # plot resulting grid
-            fig, ax = plt.subplots(*args, **kwargs)
-            ax.set_xlabel("axis 1 $(x)$")
-            ax.set_ylabel("axis 0 $(y)$")
-            ax.set_xlim(-0.5, self._size_x-0.5)
-            ax.set_ylim(-0.5, self._size_y-0.5)
-            ax.set_xticks(np.arange(self._size_x))
-            ax.set_yticks(np.arange(self._size_y))
-            ax.xaxis.set_minor_locator(tick.AutoMinorLocator(2))
-            ax.yaxis.set_minor_locator(tick.AutoMinorLocator(2))
-            ax.xaxis.set_ticks_position("top")
-            ax.xaxis.set_label_position("top")
-            ax.invert_yaxis()
-            ax.grid(visible=True, which="minor")
-            for coords, rank in np.ndenumerate(grid):
-                ax.annotate(f"$\\bf rank~{rank}$\n{coords}", coords, ha="center", va="center")
-            plt.show()
+            return grid

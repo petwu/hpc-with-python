@@ -22,10 +22,10 @@ class LatticeBoltzmann:
                  init_velocity: np.ndarray = None,
                  boundaries: list[boundary.BaseBoundaryCondition] = None,
                  decomposition: tuple[int, int] = None,
-                 plot: bool | str = None,
+                 plot: bool | str = False,
                  plot_size: int = 200,
                  plot_stages: list[tuple[int, int]] = None,
-                 animate: bool = None):
+                 animate: bool = False):
         """
         Construct a object that can run a Lattice Boltzman based fluid simulation.
 
@@ -341,7 +341,8 @@ class LatticeBoltzmann:
         # - multiply along axis c the velocity vector (_channel_ca[:, a]) with each value of the pdf (_pdf_cij[:, i, j])
         # - and sum up these products over all channels (c)
         # - the resulting sum of products is one of two velocity component (_velocity_aij[:, i, j])
-        self._velocity_aij = np.einsum("cij,ca->aij", self._pdf_cij, self._channel_ca) / self._density_ij
+        self._velocity_aij = np.einsum("cij,ca->aij", self._pdf_cij, self._channel_ca) / \
+            np.maximum(self._density_ij, 1e-12)
 
     def update_equilibrium(self):
         assert self._density_ij.shape == self._velocity_aij.shape[1:], \
@@ -442,8 +443,7 @@ class LatticeBoltzmann:
             Further arguments for the process bar. See :method`tqdm.trange`
         """
         if progress and n > 1 and (not self.is_parallel or self._mpi.rank == 0):
-            if not "file" in kwargs:
-                kwargs["file"] = sys.stdout
+            kwargs.setdefault("file", sys.stdout)
             steps = trange(n, *args, **kwargs)
         else:
             steps = range(n)
@@ -455,10 +455,10 @@ class LatticeBoltzmann:
             self.boundary_handling(False)
             self.collision_step()
             self.update_plot()
-            self._step_i += 1
 
     def update_plot(self):
         """
         Update the plot of the density field.
         """
         self.plot.update(self._step_i, self._density_ij)
+        self._step_i += 1
