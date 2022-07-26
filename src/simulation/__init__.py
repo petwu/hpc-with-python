@@ -1,1 +1,1 @@
-from .lattice_boltzmann import LatticeBoltzmann
+from ._lattice_boltzmann import LatticeBoltzmann

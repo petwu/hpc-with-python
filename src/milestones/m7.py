@@ -7,7 +7,7 @@ import numpy as np
 import src.boundary as bdry
 import src.simulation as sim
 
-from .common import init_args, rnd_tex, validate_args
+from ._common import init_args, rnd_tex, validate_args
 
 
 def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
@@ -50,7 +50,7 @@ def main(args: argparse.Namespace):
                      f"Uw{args.wall_velocity}"])
 
     # run simulation
-    if lattice.mpi.rank == 0:
+    if not lattice.is_parallel or lattice.mpi.rank == 0:
         print("-- run simulation")
     if (lattice.is_parallel
         and os.path.isfile(f"{args.output_dir}/data/{stem}_u.npy")
@@ -89,10 +89,10 @@ def main(args: argparse.Namespace):
             velocity = np.load(f"{args.output_dir}/data/{stem}.npy")
         filename = f"{args.output_dir}/{stem}.png"
         print(f"-- save plot: {filename}")
-        plot_asd(filename, args, lattice, velocity)
+        plot_velocity_field(filename, args, lattice, velocity)
 
 
-def plot_asd(filename: str, args: argparse.Namespace, lattice: sim.LatticeBoltzmann, velocity: np.ndarray):
+def plot_velocity_field(filename: str, args: argparse.Namespace, lattice: sim.LatticeBoltzmann, velocity: np.ndarray):
     # TODO: what is L in case size_y != size_x?
     L = args.size_y
     Re = L * args.wall_velocity / lattice.viscosity

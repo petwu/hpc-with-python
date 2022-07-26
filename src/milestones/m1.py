@@ -4,7 +4,7 @@ import numpy as np
 import src.simulation as sim
 from tqdm import tqdm, trange
 
-from .common import init_args
+from ._common import init_args
 
 
 def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:

@@ -9,7 +9,7 @@ import src.simulation as sim
 import src.visualization as visz
 from tqdm import tqdm, trange
 
-from .common import init_args, omega_to_viscosity, rnd_tex, validate_args
+from ._common import init_args, omega_to_viscosity, rnd_tex, validate_args
 
 
 def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:

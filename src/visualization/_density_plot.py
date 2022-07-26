@@ -1,6 +1,6 @@
 from matplotlib import animation, pyplot as plt
 from IPython import display
-from .stages import PlotStages
+from ._stages import PlotStages
 import numpy as np
 import os
 import re

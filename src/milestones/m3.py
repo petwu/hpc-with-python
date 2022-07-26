@@ -7,7 +7,7 @@ from scipy.signal import argrelextrema
 from src.simulation import LatticeBoltzmann
 from tqdm import trange
 
-from .common import init_args, validate_args
+from ._common import init_args, validate_args
 
 
 def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:

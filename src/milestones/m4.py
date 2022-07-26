@@ -6,7 +6,7 @@ import src.boundary as bdry
 import src.simulation as sim
 from tqdm import trange
 
-from .common import init_args, validate_args, exponential_steps
+from ._common import init_args, validate_args, exponential_steps
 
 
 def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
