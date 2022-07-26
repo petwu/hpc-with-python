@@ -1,0 +1,52 @@
+% !TeX program = lualatex
+% !BIB program = biber
+% !TeX encoding = UTF-8
+% !TeX spellcheck = en_US
+\documentclass[a4paper,12pt]{article}
+
+% titlepage/metadata definitions
+\newcommand{\thetitle}{High Performance Computing with Python}
+\newcommand{\thesubtitle}{-- Final Report --}
+\newcommand{\theauthor}{Peter Würth}
+\newcommand{\thematnr}{5306261}
+\newcommand{\theemail}{peter.wuerth@students.uni-freiburg.de}
+\newcommand{\thedate}{\today}
+
+\input{preamble}
+\usepackage{fancyhdr}
+
+\begin{document}
+
+    % title page
+    \begin{titlepage}
+        \begin{center}
+            \begin{singlespace}
+                \includegraphics[width=0.5\linewidth]{logo-uni-freiburg.eps}\\[4\baselineskip]
+                {\huge\textbf{\thetitle}}\\[1\baselineskip]
+                {\Large\thesubtitle}\\[3\baselineskip]
+                {\large \theauthor \\ \thematnr \\ \theemail}\\\vfill
+                \thedate
+            \end{singlespace}
+        \end{center}
+    \end{titlepage}
+
+    % table of contents
+    \pagenumbering{gobble}
+    \pdfbookmark{Contents}{toc}
+    \tableofcontents
+
+    % main content
+    \pagenumbering{arabic}
+    \include{content/introduction}
+    \include{content/lattice_boltzmann}
+    \include{content/implementation}
+    \include{content/experiments}
+    \include{content/conclusions}
+
+    % bibliography
+    \pdfbookmark{References}{bib}
+	% TODO: remove \nocite
+	\nocite{*}
+    \printbibliography[title=References]
+
+\end{document}

@@ -1,0 +1,41 @@
+% language
+\usepackage[english]{babel}
+
+% font
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+\renewcommand{\familydefault}{\sfdefault}
+\usepackage{csquotes}
+
+% spacing
+\usepackage{setspace}
+%\usepackage[onehalfspacing]{setspace}
+
+% bibliography
+\usepackage[backend=biber]{biblatex}
+\addbibresource{literature.bib}
+\DefineBibliographyStrings{english}{
+    url={[Online]\adddot\addspace URL}
+}
+
+% media
+\usepackage{graphicx}
+\graphicspath{{media/}}
+
+% math
+\usepackage{amsmath}
+
+% code snippets
+\usepackage{listings}
+
+% links
+\usepackage[pdfencoding=auto]{hyperref}
+\hypersetup{
+    pdftitle={\thetitle},
+    pdfauthor={\theauthor},
+    pdfcreator={LuaLaTeX},
+    breaklinks,
+    hidelinks,
+    bookmarksnumbered=true,
+    pageanchor=true,
+}

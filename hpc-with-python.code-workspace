@@ -1,6 +1,8 @@
 {
   "folders": [{ "path": "."}],
   "settings": {
-    "jupyter.notebookFileRoot": "${workspaceFolder}"
+    "jupyter.notebookFileRoot": "${workspaceFolder}",
+    "latex-workshop.bibtex-format.sort.enabled": true,
+    "latex-workshop.latex.recipe.default": "latexmk (lualatex)"
   }
 }
