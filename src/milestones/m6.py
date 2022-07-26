@@ -188,11 +188,12 @@ def plot_animation_webm(filename: str,
     def update_streamplot(frame):
         i, t = frame
         ax.clear()
-        ax.set_title("{}, {}, {}, {} (x{})".format(rnd_tex('Re', Re, 1),
-                                                   rnd_tex('\\nu', viscosity, 2),
-                                                   rnd_tex('\\omega', lattice.omega, 2),
-                                                   rnd_tex('U_w', wall_velocity, 3),
-                                                   anim_stages.get_step_size(t)),
+        ax.set_title("{}, {}, {}, {}, $t={}$ (x{})".format(rnd_tex('Re', Re, 1),
+                                                           rnd_tex('\\nu', viscosity, 2),
+                                                           rnd_tex('\\omega', lattice.omega, 2),
+                                                           rnd_tex('U_w', wall_velocity, 3),
+                                                           t,
+                                                           anim_stages.get_step_size(t)),
                      loc="left")
         ax.set_xlabel(f"$x$ dimension")
         ax.set_ylabel(f"$y$ dimension")
