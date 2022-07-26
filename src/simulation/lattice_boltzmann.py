@@ -188,7 +188,7 @@ class LatticeBoltzmann:
         max_density = np.max(np.sum(self._pdf_cij, axis=0))
         self._plot = visualization.DensityPlot(X, Y,
                                                plot_size=plot_size,
-                                               plot_stages=visualization.PlotStages(stages=plot_stages, omega=omega),
+                                               plot_stages=visualization.PlotStages(stages=plot_stages),
                                                vmin=min_density,
                                                vmax=max_density,
                                                plot=plot,

@@ -15,7 +15,7 @@ class PlotStages:
 
     This means, the following steps are plotted: 0, 1, 2, 4, 5, 6, 7, 8, 9, 10, 12, 14, 16, 18, 20, 25, 30, 35, 40, ...
     """
-    def __init__(self, stages: list[tuple[int, int]] = None, omega: float = 1.0) -> None:
+    def __init__(self, stages: list[tuple[int, int]] = None) -> None:
         """
         Contructor.
 
@@ -23,14 +23,8 @@ class PlotStages:
         ----------
         stages : list[tuple[int, int]]
             The stages definitions, i.e. a list of ``(start_index, step_size)`` tuples.
-
-        omega : float
-            The rate at which the Lattice Boltzmann system is pushed towards the equilibrium: ω=1/τ
-
-            This parameter is only used, if ``stages`` is not defined in order to set an appropriate default value.
         """
         if stages is None:
-            # TODO: use omega for the default value
             stages = [(0, 1), (500, 2), (1000, 5), (2000, 10), (10000, 50), (100000, 100), (1000000, 1000)]
         self._stages = stages
         self.reset()
