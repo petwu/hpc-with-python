@@ -1,10 +1,10 @@
 from __future__ import annotations
 import src.simulation as sim
 import numpy as np
-from ._base import BaseBoundaryCondition, Boundary
+from ._base import BaseBoundary, Boundary
 
 
-class MovingWallBoundaryCondition(BaseBoundaryCondition):
+class MovingWall(BaseBoundary):
     """
     Models a moving wall boundary condition, where the bouncing back populations will gain or lose momentum during the
     interaction with the wall.
@@ -18,7 +18,7 @@ class MovingWallBoundaryCondition(BaseBoundaryCondition):
         Parameters
         ----------
         boundaries : str | Boundary
-            See :class:`BaseBoundaryCondition`.
+            See :class:`BaseBoundary`.
 
         wall_velocity : list | np.ndarray
             Velocity of the wall. The value should be an array of shape ``(2,)`` or list of length 2 where the 1st and
@@ -35,7 +35,7 @@ class MovingWallBoundaryCondition(BaseBoundaryCondition):
 
     def initialize(self, lattice: sim.LatticeBoltzmann, boundaries: str | Boundary = None):
         """
-        Implements the :method:`BaseBoundaryCondition.initialize` method.
+        Implements the :method:`BaseBoundary.initialize` method.
         """
         super().initialize(lattice, boundaries)
 
@@ -100,7 +100,7 @@ class MovingWallBoundaryCondition(BaseBoundaryCondition):
 
     def apply(self, lattice: sim.LatticeBoltzmann):
         """
-        Implements the :method:`BaseBoundaryCondition.apply` method.
+        Implements the :method:`BaseBoundary.apply` method.
         """
         super().apply(lattice)
 

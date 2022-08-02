@@ -38,8 +38,8 @@ def main(args: argparse.Namespace):
     lattice = sim.LatticeBoltzmann(args.size_x, args.size_y, omega=args.omega, viscosity=args.viscosity,
                                    decomposition=args.decomposition,
                                    init_density=np.ones((args.size_y, args.size_x)),
-                                   boundaries=[bdry.RigidWallBoundaryCondition("lrb"),
-                                               bdry.MovingWallBoundaryCondition("t", [0, args.wall_velocity])])
+                                   boundaries=[bdry.RigidWall("lrb"),
+                                               bdry.MovingWall("t", [0, args.wall_velocity])])
 
     stem = "_".join(["m7",
                      f"x{args.size_x}",

@@ -87,8 +87,8 @@ def main(args: argparse.Namespace):
     lattice = [
         sim.LatticeBoltzmann(args.size_x, args.size_y, viscosity=viscosity,
                              init_density=np.ones((args.size_y, args.size_x)),
-                             boundaries=[bdry.MovingWallBoundaryCondition("t", [0, wall_velocity]),
-                                         bdry.RigidWallBoundaryCondition("blr")])
+                             boundaries=[bdry.MovingWall("t", [0, wall_velocity]),
+                                         bdry.RigidWall("blr")])
         for _, viscosity, wall_velocity, _ in params
     ]
 

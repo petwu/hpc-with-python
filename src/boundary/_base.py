@@ -51,7 +51,7 @@ class Boundary(enum.Flag, metaclass=BoundaryMeta):
         return self.value.bit_count()
 
 
-class BaseBoundaryCondition(abc.ABC):
+class BaseBoundary(abc.ABC):
     """
     Abstract base class for all boundary conditions.
     """
@@ -87,7 +87,7 @@ class BaseBoundaryCondition(abc.ABC):
         }
 
     def __str__(self) -> str:
-        return f"{type(self).__name__.replace('BoundaryCondition', '')}({self.boundaries})"
+        return f"{type(self).__name__}({self.boundaries})"
 
     def __repr__(self) -> str:
         return self.__str__()

@@ -20,7 +20,7 @@ class LatticeBoltzmann:
                  init_pdf: np.ndarray = None,
                  init_density: np.ndarray = None,
                  init_velocity: np.ndarray = None,
-                 boundaries: list[boundary.BaseBoundaryCondition] = None,
+                 boundaries: list[boundary.BaseBoundary] = None,
                  decomposition: tuple[int, int] = None,
                  plot: bool | str = False,
                  plot_size: int = 200,
@@ -51,9 +51,9 @@ class LatticeBoltzmann:
             - ``init_density``: ``(Y, X)``
             - ``init_velocity``: ``(2, Y, X)``
 
-        boundaries : list[boundary.BaseBoundaryCondition]
+        boundaries : list[boundary.BaseBoundary]
             A list of boundary conditions to be applied. All passed objects must inherit and extend the
-            :class:``BaseBoundaryCondition`` class. If no explicit boundary conditions are applied, the streaming
+            :class:``BaseBoundary`` class. If no explicit boundary conditions are applied, the streaming
             operator implicitly implements periodic boundary conditions.
 
         decomposition : tuple[int, int]

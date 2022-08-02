@@ -31,8 +31,8 @@ def main(args: argparse.Namespace):
     # create lattice
     lattice = sim.LatticeBoltzmann(args.size_x, args.size_y, omega=args.omega, viscosity=args.viscosity,
                                    init_density=np.ones((args.size_y, args.size_x)),
-                                   boundaries=[bdry.RigidWallBoundaryCondition("tb"),
-                                               bdry.PeriodicPressureGradientBoundaryCondition("h", args.density_gradient)])
+                                   boundaries=[bdry.RigidWall("tb"),
+                                               bdry.PeriodicPressureGradient("h", args.density_gradient)])
 
     # run simulation and take measurements
     print("-- run simulation: Poiseuille flow")

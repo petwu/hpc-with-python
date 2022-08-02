@@ -34,8 +34,8 @@ def main(args: argparse.Namespace):
     # initialize lattice
     lattice = sim.LatticeBoltzmann(args.size_x, args.size_y, omega=args.omega, viscosity=args.viscosity,
                                    init_density=np.ones((args.size_y, args.size_x)),
-                                   boundaries=[bdry.MovingWallBoundaryCondition("t", [0, args.wall_velocity]),
-                                               bdry.RigidWallBoundaryCondition("b")])
+                                   boundaries=[bdry.MovingWall("t", [0, args.wall_velocity]),
+                                               bdry.RigidWall("b")])
 
     # run simulation and take measurements
     print("-- run simulation: couette flow")

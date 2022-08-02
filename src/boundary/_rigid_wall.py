@@ -1,9 +1,9 @@
 from __future__ import annotations
 import src.simulation as sim
-from ._base import BaseBoundaryCondition, Boundary
+from ._base import BaseBoundary, Boundary
 
 
-class RigidWallBoundaryCondition(BaseBoundaryCondition):
+class RigidWall(BaseBoundary):
     """
     Models a rigid wall boundary condition, that has a bounce back behavior at the boundaries.
     """
@@ -13,13 +13,13 @@ class RigidWallBoundaryCondition(BaseBoundaryCondition):
         Parameters
         ----------
         boundaries : str|Boundary
-            See :class:`BaseBoundaryCondition`.
+            See :class:`BaseBoundary`.
         """
         super().__init__(boundaries, False)
 
     def apply(self, lattice: sim.LatticeBoltzmann):
         """
-        Implements the :method:`BaseBoundaryCondition.apply` method for a rigid wall.
+        Implements the :method:`BaseBoundary.apply` method for a rigid wall.
         """
         super().apply(lattice)
 

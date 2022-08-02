@@ -1,10 +1,10 @@
 from __future__ import annotations
 import src.simulation as sim
 import numpy as np
-from ._base import BaseBoundaryCondition, Boundary
+from ._base import BaseBoundary, Boundary
 
 
-class PeriodicPressureGradientBoundaryCondition(BaseBoundaryCondition):
+class PeriodicPressureGradient(BaseBoundary):
     """
     Models a system with periodic boundary conditions and a pressure gradient between two opposing boundaries.
     """
@@ -48,7 +48,7 @@ class PeriodicPressureGradientBoundaryCondition(BaseBoundaryCondition):
 
     def initialize(self, lattice: sim.LatticeBoltzmann, boundaries: str | Boundary = None):
         """
-        Implements the :method:`BaseBoundaryCondition.initialize` method.
+        Implements the :method:`BaseBoundary.initialize` method.
         """
         super().initialize(lattice, boundaries)
 
@@ -66,7 +66,7 @@ class PeriodicPressureGradientBoundaryCondition(BaseBoundaryCondition):
 
     def apply(self, lattice: sim.LatticeBoltzmann):
         """
-        Implements the :method:`BaseBoundaryCondition.apply` method.
+        Implements the :method:`BaseBoundary.apply` method.
         """
         super().apply(lattice)
 
