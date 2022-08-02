@@ -140,7 +140,7 @@ def sd_plot_decay_single(filename: str,
                          decay_i: np.ndarray,
                          viscosity: float,
                          measurement_point: int):
-    plt.figure(figsize=(15, 6))
+    plt.figure(figsize=(12, 5))
     plt.xlabel("time $t$")
     plt.ylabel("density $\\rho$")
     plt.plot(np.ones_like(decay_i)*args.rho0, label="$\\rho_0$")
@@ -158,7 +158,7 @@ def sd_plot_decay_multiple(filename: str,
                            decay_ij: np.ndarray,
                            viscosity_i: np.ndarray,
                            measurement_point: int):
-    plt.figure(figsize=(15, 6))
+    plt.figure(figsize=(12, 5))
     plt.xlabel("time $t$")
     plt.ylabel("normalized density perturbation "
                f"$\\rho_y(x={measurement_point}, t)\,/\,\\rho_y(x={measurement_point}, t=0)$")
@@ -176,7 +176,7 @@ def sd_plot_decay_multiple(filename: str,
     legend[-2] = [plt.plot([], [], "k-")[0], "analytical solutions"]
     legend[-1] = [plt.plot([], [], "kx")[0], "measurements (peaks only)"]
     l1 = plt.legend(legend[-2:, 0], legend[-2:, 1], ncol=2, loc="upper right")
-    plt.legend(legend[:-2, 0], legend[:-2, 1], ncol=3, loc="upper right", bbox_to_anchor=(0, 0, 1, 0.93))
+    plt.legend(legend[:-2, 0], legend[:-2, 1], ncol=4, loc="upper right", bbox_to_anchor=(0, 0, 1, 0.93))
     plt.gca().add_artist(l1)
     plt.savefig(filename, dpi=args.dpi, bbox_inches="tight")
     plt.close()
@@ -269,7 +269,7 @@ def sv_plot_decay_multiple(filename: str,
                            decay_ij: np.ndarray,
                            viscosity_i: np.ndarray,
                            measurement_point: int):
-    plt.figure(figsize=(15, 6))
+    plt.figure(figsize=(12, 5))
     plt.xlabel("time $t$")
     plt.ylabel(f"normalized velocity perturbation $u_x(y={measurement_point}, t)\,/\,\\varepsilon$")
     legend = np.empty((len(omega_i)+2, 2), dtype=tuple)
@@ -285,7 +285,7 @@ def sv_plot_decay_multiple(filename: str,
     legend[-2] = [plt.plot([], [], "k-.")[0], "analytical solutions (dashed)"]
     legend[-1] = [plt.plot([], [], "k", alpha=0.4)[0], "measurements (semi-transparent)"]
     l1 = plt.legend(legend[-2:, 0], legend[-2:, 1], ncol=2, loc="upper right")
-    plt.legend(legend[:-2, 0], legend[:-2, 1], ncol=3, loc="upper right", bbox_to_anchor=(0, 0, 1, 0.93))
+    plt.legend(legend[:-2, 0], legend[:-2, 1], ncol=4, loc="upper right", bbox_to_anchor=(0, 0, 1, 0.93))
     plt.gca().add_artist(l1)
     plt.savefig(filename, dpi=args.dpi, bbox_inches="tight")
     plt.close()

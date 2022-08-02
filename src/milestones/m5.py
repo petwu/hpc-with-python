@@ -85,16 +85,17 @@ def plot_velocity_profile_evolution(filename: str,
 
 
 def plot_velocity_field(filename: str, args: argparse.Namespace, velocity_field: np.ndarray):
-    fig, ax = plt.subplots(figsize=(6, 4))
+    fig, ax = plt.subplots(figsize=(5, 3))
     ax.set_title(f"$t={args.n_steps}$")
     ax.set_ylabel("$y$ dimension")
     ax.set_xlabel("$x$ dimension")
     ax.invert_yaxis()
-    x, y, v, u = np.arange(args.size_x), np.arange(args.size_y), velocity_field[-1, 0], velocity_field[-1, 1]
+    x = np.arange(args.size_x)
+    y = np.arange(args.size_y)
+    v = velocity_field[-1, 0]
+    u = velocity_field[-1, 1]
     ax.streamplot(x, y, u, v, color=u, density=0.9)
-    ax.plot([-0.5, args.size_x-0.5], [-0.5, -0.5], color="red")
-    ax.plot([-0.5, args.size_x-0.5], [args.size_y+0.5, args.size_y+0.5], color="red", label="rigid wall")
-    ax.legend(bbox_to_anchor=(1.225, 1.025), loc="upper left")
+    ax.scatter([-0.5, args.size_x-0.5], [-0.5, args.size_y-0.5], alpha=0)
     fig.colorbar(plt.cm.ScalarMappable(plt.Normalize(u.min(), u.max()), plt.cm.viridis),
                  ax=ax, label="velocity magnitude $|u|$")
     plt.savefig(filename, dpi=args.dpi, bbox_inches="tight")
@@ -102,7 +103,7 @@ def plot_velocity_field(filename: str, args: argparse.Namespace, velocity_field:
 
 
 def plot_density_gradient(filename: str, args: argparse.Namespace, density: np.ndarray):
-    plt.figure()
+    plt.figure(figsize=(4, 3))
     plt.xlabel("$x$ dimension")
     plt.ylabel("density $\\rho$")
     plt.plot(density[args.size_y//2, 1:-1], label=f"$\\rho(y={args.size_y//2}, x, t={args.n_steps})$")

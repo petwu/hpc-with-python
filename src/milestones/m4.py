@@ -1,4 +1,5 @@
 import argparse
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -15,7 +16,8 @@ def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
                                        "boundaries:\n"
                                        "- left, right: periodic boundary conditions\n"
                                        "- top: moving wall\n"
-                                       "- bottom: rigid wall")
+                                       "- bottom: rigid wall\n\n"
+                                       "Simulation results are cached under <output_dir>/data.")
     init_args(arg_parser, handler=main, size_x=100, size_y=100, n_steps=40000, omega=1.0)
     arg_parser.add_argument("-u", "--wall_velocity", metavar="u", type=float, default=0.1,
                             help="velocity of the moving wall (top boundary)\n"
@@ -37,11 +39,18 @@ def main(args: argparse.Namespace):
 
     # run simulation and take measurements
     print("-- run simulation: couette flow")
-    velocity_field = np.empty((args.n_steps+1, args.size_y, args.size_x))
-    velocity_field[0] = lattice.velocity[1]
-    for i in trange(args.n_steps, **args.tqdm_kwargs):
-        lattice.step()
-        velocity_field[i+1] = lattice.velocity[1]
+    cache_path = f"{args.output_dir}/data/m4_x{args.size_x}_y{args.size_y}_w{args.omega}_Uw{args.wall_velocity}_n{args.n_steps}.npy"
+    if os.path.isfile(cache_path):
+        print(f"-- use cache: {cache_path}")
+        velocity_field = np.load(cache_path)
+    else:
+        velocity_field = np.empty((args.n_steps+1, args.size_y, args.size_x))
+        velocity_field[0] = lattice.velocity[1]
+        for i in trange(args.n_steps, **args.tqdm_kwargs):
+            lattice.step()
+            velocity_field[i+1] = lattice.velocity[1]
+        print(f"-- save cache: {cache_path}")
+        np.save(cache_path, velocity_field)
 
     # plot results
     filename = f"{args.output_dir}/m4_velocity_profile_evolution.png"
@@ -75,10 +84,10 @@ def plot_velocity_profile_evolution(filename: str, args: argparse.Namespace, vel
 
 
 def plot_velocity_flow_field_evolution(filename: str, args: argparse.Namespace, velocity_field: np.ndarray):
-    steps, _ = exponential_steps(args.n_steps, 8)
-    n_cols = 4
+    steps, _ = exponential_steps(args.n_steps, 5)
+    n_cols = 5
     n_rows = len(steps) // n_cols
-    fig, ax = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(10, 5))
+    fig, ax = plt.subplots(n_rows, n_cols, sharex=True, sharey=True, figsize=(9, 2))
     axf = ax.flatten()
     axf[0].invert_yaxis()
     # streamplots for different time steps
@@ -92,12 +101,12 @@ def plot_velocity_flow_field_evolution(filename: str, args: argparse.Namespace, 
         if i >= n_cols*(n_rows-1):
             axf[i].set_xlabel("$x$ dimension")
         u = velocity_field[t]
-        axf[i].streamplot(x, y, u, v, density=0.5,
+        axf[i].streamplot(x, y, u, v, density=0.375,
                           color=u if u.max() != 0 or u.min() != 0 else None, cmap=plt.cm.Greys)
         axf[i].plot([-0.5, args.size_x-0.5], [-0.5, -0.5], color="red", label=f"moving wall")
         axf[i].plot([-0.5, args.size_x-0.5], [args.size_y-0.5, args.size_y-0.5], color="blue", label="rigid wall")
     # legend right of the first row
-    axf[n_cols-1].legend(bbox_to_anchor=(1.02, 1.03))
+    axf[n_cols-1].legend(bbox_to_anchor=(1.8, 0.5), loc="center left")
     fig.tight_layout()
     # colorbar right of the last row
     p = axf[-1].get_position()

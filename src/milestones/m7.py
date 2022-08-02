@@ -17,7 +17,7 @@ def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
                                        "- left, right, bottom: rigid wall\n"
                                        "- top: moving wall",
                                        conflict_handler="resolve")
-    init_args(arg_parser, handler=main, size_x=300, size_y=300, n_steps=100000, omega=1.7)
+    init_args(arg_parser, handler=main, size_x=300, size_y=300, n_steps=100000, viscosity=0.03)
     arg_parser.add_argument("-u", "--wall_velocity", metavar="U",
                             type=float, default=0.1,
                             help="velocity of the moving wall")
@@ -96,15 +96,10 @@ def plot_velocity_field(filename: str, args: argparse.Namespace, lattice: sim.La
     L = max(args.size_x, args.size_y)
     Re = L * args.wall_velocity / lattice.viscosity
 
-    fig, ax = plt.subplots(figsize=(6.8, 6.0), dpi=100)
+    fig, ax = plt.subplots(figsize=(5.2, 4.5))
     ax.set_xlim(0, args.size_x-1)
     ax.set_ylim(0, args.size_y-1)
     ax.invert_yaxis()
-    ax.set_title("{}, {}, {}, {}, $t={}$".format(rnd_tex("Re", Re, 1),
-                                                 rnd_tex("\\nu", lattice.viscosity, 2),
-                                                 rnd_tex("\omega", lattice.omega, 2),
-                                                 rnd_tex("U_w", args.wall_velocity, 3),
-                                                 args.n_steps))
     ax.set_ylabel("$y$ dimension")
     ax.set_xlabel("$x$ dimension")
     x, y = np.arange(args.size_x), np.arange(args.size_y)

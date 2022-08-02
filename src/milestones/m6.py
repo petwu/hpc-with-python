@@ -1,5 +1,6 @@
 import argparse
 import os
+import sys
 
 import matplotlib.animation as anim
 import matplotlib.pyplot as plt
@@ -39,13 +40,9 @@ def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
                             help="velocities of the moving wall")
     arg_parser.add_argument("-a", "--animate", nargs="+", metavar="i",
                             type=float, default=[],
-                            help="list of parameter indices to be animated: "
-                            "i = (--reynolds_nr index + 1) * (--viscosity|--omega index + 1) - 1\n"
-                            "example:\n"
-                            "- with --reynolds_nr 250 500 750 1000 and --viscosity 0.03 0.09 0.15\n"
-                            "- you wish to (Re=1000, ν=0.09)\n"
-                            "- then pass --animate 7, since (3+1)*(1+1)-1 = 7\n"
-                            "pass -1 in order to skip animation")
+                            help="list of parameter indices to be animated\n"
+                            "pass -1 in order to skip animation\n"
+                            "pass -2 to print all indices with associated parameters and exit")
     return arg_parser
 
 
@@ -55,7 +52,7 @@ def main(args: argparse.Namespace):
         args.viscosity = [0.03, 0.09, 0.15]
         args.reynolds_nr = [250, 500, 750, 1000]
         if not args.animate:
-            args.animate = [7]
+            args.animate = [10]
 
     # validate arguments
     validate_args(args)
@@ -79,8 +76,8 @@ def main(args: argparse.Namespace):
     # parameter sets
     # note: round to account for conversion errors from above
     params = [(Re, nu, Re*nu/L, f"{args.output_dir}/data/m6_x{args.size_x}_y{args.size_y}_n{args.n_steps}_v{nu}_Re{Re}.npy")
-              for nu in np.array(args.viscosity).round(12)
-              for Re in np.array(args.reynolds_nr).round(12)]
+              for Re in np.array(args.reynolds_nr).round(12)
+              for nu in np.array(args.viscosity).round(12)]
 
     # animation: plot only every nth step and increase step size over time
     anim_stages = visz.PlotStages([(0, 10), (1000, 50), (5000, 100), (20000, 500), (50000, 1000)])
@@ -94,6 +91,14 @@ def main(args: argparse.Namespace):
                                          bdry.RigidWallBoundaryCondition("blr")])
         for _, viscosity, wall_velocity, _ in params
     ]
+
+    if -2 in args.animate:
+        print("index | parameters")
+        print("--------------------------------------------------------------------------------")
+        for l in range(len(lattice)):
+            Re, viscosity, wall_velocity, _ = params[l]
+            print(f"{l:5} | Re={Re}, omega={lattice[l].omega}, viscosity={viscosity}, wall_velocity={wall_velocity}")
+        sys.exit(0)
 
     # run simulation
     print("-- run simulation: sliding lid (serial)")
@@ -121,22 +126,21 @@ def main(args: argparse.Namespace):
     print(f"-- save plot: {filename}")
     plot_streamplots(filename, args, lattice, params)
 
-    for l in args.animate:
-        if l < 0:
-            continue
-        Re, nu, _, _ = params[l]
-        filename = f"{args.output_dir}/m6_x{args.size_x}_y{args.size_y}_v{nu}_Re{Re}.webm"
-        print(f"-- save animation: {filename}")
-        plot_animation_webm(filename, args, params[l], lattice[l], anim_stages, anim_steps)
+    if not -1 in args.animate:
+        for l in args.animate:
+            Re, nu, _, _ = params[l]
+            filename = f"{args.output_dir}/m6_x{args.size_x}_y{args.size_y}_v{nu}_Re{Re}.webm"
+            print(f"-- save animation: {filename}")
+            plot_animation_webm(filename, args, params[l], lattice[l], anim_stages, anim_steps)
 
 
 def plot_streamplots(filename, args: argparse.Namespace, lattice: list[sim.LatticeBoltzmann], params: np.ndarray):
-    n_cols = len(args.reynolds_nr)
+    n_cols = len(args.viscosity)
     n_rows = len(lattice) // n_cols
     fig, ax = plt.subplots(n_rows, n_cols,
                            sharex=True, sharey=True,
-                           figsize=(16, 14*(n_rows/n_cols)),
-                           gridspec_kw={"width_ratios": [1, 1, 1, 1.11]})
+                           figsize=(12.5, 11.8*(n_rows/n_cols)),
+                           gridspec_kw={"width_ratios": [1, 1, 1.11]})
     axf = ax.flatten()
     axf[0].set_xlim(0, args.size_x)
     axf[0].set_ylim(0, args.size_y)
@@ -158,7 +162,7 @@ def plot_streamplots(filename, args: argparse.Namespace, lattice: list[sim.Latti
         v = velocity_field[-1, 0]
         norm = plt.Normalize(0, wall_velocity)
         axf[l].streamplot(x, y, u, v, color=np.sqrt(u**2 + v**2), norm=norm, density=1.2)
-        if l % n_cols == 3:
+        if l % n_cols == n_cols-1:
             cbar = fig.colorbar(plt.cm.ScalarMappable(norm, plt.cm.viridis), ax=axf[l], fraction=0.05)
             cbar.set_label(label="velocity magnitude $|u|$", fontsize="large")
             cbar.ax.set_yticks(ticks=[0, wall_velocity], labels=["0", "$U_w$"])
