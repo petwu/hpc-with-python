@@ -1,17 +1,10 @@
 # scientific libraries
-numpy>=1.22
+numpy>=1.23
 scipy>=1.8
 matplotlib>=3.5
 
-# jupyter
-ipympl>=0.9
-jupyterlab>=3.4
-PyQt6>=6.3
-tqdm>=4.64
-
 # parallelization
-ipyparallel>=8.3
 mpi4py>=3.1
 
-# code formatting
-pep8>=1.7
+# util
+tqdm>=4.64
