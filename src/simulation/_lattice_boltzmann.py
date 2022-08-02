@@ -71,8 +71,10 @@ class LatticeBoltzmann:
         """
 
         # parameter checks
-        if not isinstance(omega, int | float) or not 0 < omega < 2:
+        if omega and (not isinstance(omega, int | float) or not 0 < omega < 2):
             raise ValueError("for a stable simulation, reasonable values for omega should be in the interval (0, 2)")
+        elif viscosity and (not isinstance(viscosity, int | float) or not 0 < viscosity < 4):
+            raise ValueError("for a stable simulation, reasonable values for viscosity should be in the interval (0, 4)")
         if init_pdf is None and init_density is None and init_velocity is None:
             raise ValueError("at least one of init_pdf/init_density/init_velocity must be provided")
         elif init_pdf is not None and (init_density is not None or init_velocity is not None):
