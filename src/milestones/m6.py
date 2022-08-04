@@ -182,7 +182,7 @@ def plot_animation_webm(filename: str,
     velocity_field = np.load(cache_path)
     velocity_magnitude = np.sqrt(velocity_field[:, 1]**2 + velocity_field[:, 0]**2)
 
-    fig, ax = plt.subplots(figsize=(6.8, 6.0))
+    fig, ax = plt.subplots(figsize=(7.0, 6.0))
     fig.suptitle(f"Lid-Driven Cavity", fontweight="bold")
     cmap = plt.cm.viridis
     fig.colorbar(plt.cm.ScalarMappable(plt.Normalize(0, wall_velocity), cmap), ax=ax, label="velocity magnitude $|u|$")
