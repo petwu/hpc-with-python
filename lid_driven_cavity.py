@@ -13,7 +13,7 @@ import src.simulation as sim
 # parse arguments
 args = argparse.ArgumentParser(formatter_class=lambda prog:
                                argparse.ArgumentDefaultsHelpFormatter(prog, max_help_position=32),
-                               description="Run the sliding lid experiment in serial or parallel. "
+                               description="Run the lid-driven cavity experiment in serial or parallel. "
                                "In order to run in parallel, you need to run it using `mpiexec`.")
 args.add_argument("-x", "--size_x", metavar="<X>", type=int, default=300,
                   help=f"size of the grid in x direction")

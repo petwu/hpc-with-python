@@ -9,4 +9,4 @@ module load mpi/openmpi/4.1
 pip install --user --upgrade numpy scipy mpi4py tqdm matplotlib
 
 # run experiment
-exec mpiexec --bind-to core --map-by core python3 sliding_lid.py $@
+exec mpiexec --bind-to core --map-by core python3 lid_driven_cavity.py $@

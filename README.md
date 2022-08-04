@@ -22,16 +22,16 @@ In order to run the parallelized code, you need some MPI implementation like [Op
 
 ## Scaling Tests with Lid-Driven Cavity
 
-A parameterizable implementation of the lid-driven cavity or sliding-lid experiment can be run with the
-[sliding_lid.py](sliding_lid.py) script. Run
+A parameterizable implementation of the lid-driven cavity experiment can be run with the
+[lid_driven_cavity.py](lid_driven_cavity.py) script. Run
 ```sh
-python3 sliding_lid.py --help
+python3 lid_driven_cavity.py --help
 ```
 for a list of possible arguments.
 
 Use `mpiexec` in order to run it in parallel, e.g.:
 ```sh
-mpiexec -n 16 python3 sliding_lid.py -x 300 -y 300 -w 1.7 -n 100000
+mpiexec -n 16 python3 lid_driven_cavity.py -x 300 -y 300 -w 1.7 -n 100000
 ```
 
 ## Milestones

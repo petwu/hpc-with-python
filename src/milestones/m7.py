@@ -11,9 +11,9 @@ from ._common import init_args, rnd_tex, validate_args
 
 
 def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
-    arg_parser = subparsers.add_parser("m7", help="milestone 7: sliding lid (parallel)",
-                                       description="Implementation of the sliding lid experiment with the following "
-                                       "set of boundaries:\n"
+    arg_parser = subparsers.add_parser("m7", help="milestone 7: lid-driven cavity (parallel)",
+                                       description="Implementation of the lid-driven cavity experiment with the "
+                                       "following set of boundaries:\n"
                                        "- left, right, bottom: rigid wall\n"
                                        "- top: moving wall",
                                        conflict_handler="resolve")

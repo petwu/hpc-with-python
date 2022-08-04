@@ -14,9 +14,9 @@ from ._common import init_args, omega_to_viscosity, rnd_tex, validate_args
 
 
 def args(subparsers: argparse._SubParsersAction) -> argparse.ArgumentParser:
-    arg_parser = subparsers.add_parser("m6", help="milestone 6: sliding lid (serial)",
-                                       description="Implementation of the sliding lid experiment with the following "
-                                       "set of boundaries:\n"
+    arg_parser = subparsers.add_parser("m6", help="milestone 6: lid-driven cavity (serial)",
+                                       description="Implementation of the lid-driven cavity experiment with the "
+                                       "following set of boundaries:\n"
                                        "- left, right, bottom: rigid wall\n"
                                        "- top: moving wall\n\n"
                                        "The experiment is mainly driven by specifying exactly 2 of --reynolds_nr, "
@@ -52,7 +52,7 @@ def main(args: argparse.Namespace):
         args.viscosity = [0.03, 0.09, 0.15]
         args.reynolds_nr = [250, 500, 750, 1000]
         if not args.animate:
-            args.animate = [10]
+            args.animate = [9]
 
     # validate arguments
     validate_args(args)
@@ -101,7 +101,7 @@ def main(args: argparse.Namespace):
         sys.exit(0)
 
     # run simulation
-    print("-- run simulation: sliding lid (serial)")
+    print("-- run simulation: lid-driven cavity (serial)")
     for l in range(len(lattice)):
         # cached?
         cache_path = params[l][3]
@@ -183,7 +183,7 @@ def plot_animation_webm(filename: str,
     velocity_magnitude = np.sqrt(velocity_field[:, 1]**2 + velocity_field[:, 0]**2)
 
     fig, ax = plt.subplots(figsize=(6.8, 6.0))
-    fig.suptitle(f"Sliding Lid Experiment", fontweight="bold")
+    fig.suptitle(f"Lid-Driven Cavity", fontweight="bold")
     cmap = plt.cm.viridis
     fig.colorbar(plt.cm.ScalarMappable(plt.Normalize(0, wall_velocity), cmap), ax=ax, label="velocity magnitude $|u|$")
     x = np.arange(args.size_x)
