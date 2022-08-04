@@ -140,7 +140,7 @@ def sd_plot_decay_single(filename: str,
                          decay_i: np.ndarray,
                          viscosity: float,
                          measurement_point: int):
-    plt.figure(figsize=(12, 5))
+    plt.figure(figsize=(12, 2.5))
     plt.xlabel("time $t$")
     plt.ylabel("density $\\rho$")
     plt.plot(np.ones_like(decay_i)*args.rho0, label="$\\rho_0$")
@@ -158,7 +158,7 @@ def sd_plot_decay_multiple(filename: str,
                            decay_ij: np.ndarray,
                            viscosity_i: np.ndarray,
                            measurement_point: int):
-    plt.figure(figsize=(12, 5))
+    plt.figure(figsize=(12, 4.5))
     plt.xlabel("time $t$")
     plt.ylabel("normalized density perturbation "
                f"$\\rho_y(x={measurement_point}, t)\,/\,\\rho_y(x={measurement_point}, t=0)$")
@@ -194,10 +194,10 @@ def sd_plot_viscosity(filename: str,
                                             xdata=peaks,
                                             ydata=decay_ij[i, peaks])[0][0]
 
-    plt.figure()
+    plt.figure(figsize=(6, 2))
     plt.xlabel("relaxation rate $\omega$")
     plt.ylabel("kinematic viscosity $\\nu$")
-    plt.xticks(omega_i)
+    plt.xticks(omega_i[::int(np.ceil(len(omega_i)))])
     plt.plot(omega_i, viscosity_i, label="analytical")
     plt.plot(omega_i, viscosity_measured_i, label="empirical")
     plt.legend()
@@ -269,7 +269,7 @@ def sv_plot_decay_multiple(filename: str,
                            decay_ij: np.ndarray,
                            viscosity_i: np.ndarray,
                            measurement_point: int):
-    plt.figure(figsize=(12, 5))
+    plt.figure(figsize=(12, 4.5))
     plt.xlabel("time $t$")
     plt.ylabel(f"normalized velocity perturbation $u_x(y={measurement_point}, t)\,/\,\\varepsilon$")
     legend = np.empty((len(omega_i)+2, 2), dtype=tuple)
@@ -302,10 +302,10 @@ def sv_plot_viscosity(filename: str,
                                           xdata=np.arange(decay_ij[i].shape[0]),
                                           ydata=decay_ij[i])[0][0]
 
-    plt.figure(figsize=(8, 6))
+    plt.figure(figsize=(6, 2))
     plt.xlabel("relaxation rate $\omega$")
     plt.ylabel("kinematic viscosity $\\nu$")
-    plt.xticks(omega_i)
+    plt.xticks(omega_i[::int(np.ceil(len(omega_i)))])
     plt.plot(omega_i, viscosity_i, label="analytical")
     plt.plot(omega_i, viscosity_measured, label="empirical")
     plt.legend()

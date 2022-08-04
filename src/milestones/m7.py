@@ -89,13 +89,10 @@ def main(args: argparse.Namespace):
             velocity = np.load(f"{args.output_dir}/data/{stem}.npy")
         filename = f"{args.output_dir}/{stem}.png"
         print(f"-- save plot: {filename}")
-        plot_velocity_field(filename, args, lattice, velocity)
+        plot_velocity_field(filename, args, velocity)
 
 
-def plot_velocity_field(filename: str, args: argparse.Namespace, lattice: sim.LatticeBoltzmann, velocity: np.ndarray):
-    L = max(args.size_x, args.size_y)
-    Re = L * args.wall_velocity / lattice.viscosity
-
+def plot_velocity_field(filename: str, args: argparse.Namespace, velocity: np.ndarray):
     fig, ax = plt.subplots(figsize=(5.2, 4.5))
     ax.set_xlim(0, args.size_x-1)
     ax.set_ylim(0, args.size_y-1)
