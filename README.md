@@ -6,10 +6,19 @@ with Python_ at the University of Freiburg in the summer semester 2022.
 
 **Contents**
 
+- [Animation: Lid-Driven Cavity](#animation-lid-driven-cavity)
 - [Setup](#setup)
 - [Scaling Tests with Lid-Driven Cavity](#scaling-tests-with-lid-driven-cavity)
 - [Milestones](#milestones)
 - [Tests](#tests)
+
+## Animation: Lid-Driven Cavity
+
+[m6_x300_y300_v0.03_Re1000.webm](https://user-images.githubusercontent.com/39537032/182847788-903f7f5b-e381-4c12-977a-41c67552431a.mp4)
+
+<details>
+The versioned video is located under [report/media/m6_x300_y300_v0.03_Re1000.webm](report/media/m6_x300_y300_v0.03_Re1000.webm).
+</details>
 
 ## Setup
 
