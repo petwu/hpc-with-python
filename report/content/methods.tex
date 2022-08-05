@@ -1,0 +1,225 @@
+\section{Methods}
+
+This chapter describes the \glsentryfull{LBM} and its underlying concept, the \glsentryfull{BTE}.
+
+\subsection{Boltzmann Transport Equation}
+
+The \gls{BTE} describes the statistical behavior of particles in system involving density or temperature gradients such as e.g. fluids. It formulates the probability of finding a particle with velocity $v$ at position $r$ over time $t$ using the \gls{PDF} $f(r,v,t)$. Both $r$ and $v$ are functions of time $t$ themselves. The function $f$ is related to macroscopic values like the density $\rho$ or the fluid velocity $u$ through its moments, i.e. integrals over $f$ weighted with some function of $v$ \cite{timm2016lattice}:
+\begin{subequations}
+    \begin{equation}
+        \rho(r,t) = \int f(r,v,t) d^3v
+        \label{eq:bte:moment:density}
+    \end{equation}
+    \begin{equation}
+        u(r,t) = \frac{1}{\rho(r,t)} \int v f(r,v,t) d^3v
+        \label{eq:bte:moment:velocity}
+    \end{equation}
+\end{subequations}
+
+The \gls{BTE} representing time-rate of change of $f$ is given by the following equation:
+\begin{equation}
+    \frac{df}{dt} ~=~ \frac{\partial f(r,v,t)}{\partial t} + \underbrace{v \nabla_r f(r,v,t) + a \nabla_v f(r,v,t)\vphantom{\frac{1}{\frac{2}{\frac{3}{4}}}}}_{\text{streaming term}} ~=~ \underbrace{\left(\frac{\partial f(r,v,t)}{\partial t}\right)_{coll}\vphantom{\frac{1}{\frac{2}{\frac{3}{4}}}}}_{\text{collision term}}
+    \label{eq:bte}
+\end{equation}
+
+The l.h.s. of the equation is often called the streaming term and describes the movement of particles over time, while r.h.s. is called the collision term which accounts for all interactions between particles. Boltzmann's original collision operator a complex double integral over velocity space that considers all the possible
+outcomes of two-particle collisions. It is therefore common \cite{timm2016lattice}, to use a relaxation time approximation for the collision term, which assumes that $f$ locally relaxes towards an equilibrium distribution $f^{eq}$ with a characteristic relaxation time constant $\tau$ as suggested by \citeauthor{BGK} (BGK) \cite{BGK}:
+\begin{equation}
+    \frac{d}{dt} f(r,v,t) = - \frac{f(r,v,t) - f^{eq}\left(v,\rho,u,T\right)}{\tau}
+    \label{eq:bgk-collision}
+\end{equation}
+
+\subsection{Lattice Boltzmann Method (2D)}
+
+The \gls{LBM} is a discretization of the \gls{BTE} in space, velocity and time in order to solve the problem numerically.
+
+Discretization in the spatial domain is straightforward by dividing the space into an equidistant 2D grid, the lattice, as depicted in \cref{fig:discretization:grid}. For the velocity space and time, the discretization is chosen such that the distance between interpolation points in velocity space $c_i$ multiplied by the time step $\Delta t$ equals the distance between points on the spatial lattice $\Delta x_i$, i.e. $c_i \Delta t = \Delta x_i$, i.e. the velocity grid and the spatial grid should be coincident. For this purpose, a velocity set with nine directions, or channels, as illustrated in \cref{fig:discretization:d2q9} is chosen. In combination with the velocity channels in \cref{eq:lbm:channels} and unity dimensions $\Delta x = \Delta y = \Delta t$ the above condition is fulfilled. This particular discretization is commonly referred to as D2Q9, since it discretizes a 2-dimensional space with 9 velocity channels $c_i$.
+\begin{equation}
+    c = \begin{pmatrix}
+        0 & 0 & -1 & 0 & 1 & -1 & -1 & 1 & 1 \\
+        0 & 1 & 0 & -1 & 0 & 1 & -1 & -1 & 1
+    \end{pmatrix}^T
+    \label{eq:lbm:channels}
+\end{equation}
+\begin{figure}[ht]
+    \begin{subfigure}{0.4\linewidth}
+        \centering
+        \begin{tikzpicture}[
+            font=\scriptsize,
+            x=1.25cm, y=1.25cm,
+            channel/.style={draw, circle},
+            arrow/.style={-Latex, line width=0.35mm},
+        ]
+            \node[channel] (O) at (0, 0) {$0$};
+            \node[channel] (E) at (1, 0) {$1$};
+            \node[channel] (N) at (0, 1) {$2$};
+            \node[channel] (W) at (-1, 0) {$3$};
+            \node[channel] (S) at (0, -1) {$4$};
+            \node[channel] (NE) at (1, 1) {$5$};
+            \node[channel] (NW) at (-1, 1) {$6$};
+            \node[channel] (SW) at (-1, -1) {$7$};
+            \node[channel] (SE) at (1, -1) {$8$};
+            \draw[arrow] (O) -- (E);
+            \draw[arrow] (O) -- (N);
+            \draw[arrow] (O) -- (W);
+            \draw[arrow] (O) -- (S);
+            \draw[arrow] (O) -- (NE);
+            \draw[arrow] (O) -- (NW);
+            \draw[arrow] (O) -- (SW);
+            \draw[arrow] (O) -- (SE);
+        \end{tikzpicture}
+        \caption{Velocity discretization: D2Q9}
+        \label{fig:discretization:d2q9}
+    \end{subfigure}%
+    \begin{subfigure}{0.6\linewidth}
+        \centering
+        \begin{tikzpicture}[
+            x=0.7cm, y=0.7cm,
+            arrow/.style={-Latex, line width=0.35mm},
+        ]
+            % grid size
+            \def\Lx{7}
+            \def\Ly{4}
+            % blue dot position
+            \def\cx{3}
+            \def\cy{1}
+
+            % grid
+            \draw[step=1, color=gray] (0,-0.75) grid (\Lx+0.75,\Ly);
+            \draw[arrow, color=black] (0,\Ly) -- (\Lx+1,\Ly) node[above, midway, yshift=2mm] {$x$ {\scriptsize (axis $1$)}};
+            \draw[arrow, color=black] (0,\Ly) -- (0,-1) node[above, midway, xshift=-2mm, rotate=90] {$y$ {\scriptsize (axis $0$)}};
+            \pgfmathparse{\Lx-1}
+            \foreach \x in {0,...,\pgfmathresult} \node at (0.5+\x,\Ly+0.2) {\scriptsize $\x$};
+            % \node at (\Lx+0.5,\Ly+0.5) {$\dots$};
+            \pgfmathparse{\Ly-1}
+            \foreach \y in {0,...,\pgfmathresult} \node at (-0.2,\Ly-0.5-\y) {\scriptsize $\y$};
+            % \node at (-0.5,-0.25) {$\vdots$};
+
+            % D2Q9 illustration
+            \node[draw, fill, circle, color=blue] at (\cx,\cy) {};
+            \node[draw, fill, circle, color=red] at (\cx+1,\cy+1) {};
+            \draw[arrow, color=black, line width=0.4mm] (\cx,\cy) -- (\cx+1,\cy+1);
+            \draw[arrow, color=black, line width=0.4mm] (\cx+1,\cy+1) -- (\cx+2,\cy+2);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx+1,\cy);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx,\cy+1);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx-1,\cy);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx,\cy-1);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx+0.8,\cy+0.8);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx-1,\cy+1);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx-1,\cy-1);
+            \draw[arrow, color=green] (\cx,\cy) -- (\cx+1,\cy-1);
+        \end{tikzpicture}
+        \caption{Spatial discretization: regular 2D lattice}
+        \label{fig:discretization:grid}
+    \end{subfigure}
+    \caption{Discretization of the \gls{BTE}}
+    \label{fig:discretization}
+\end{figure}
+
+The probability distribution $f(r,v,t)$ can now be expressed as a set of discrete occupation numbers $f_i(x_j,t)$ for each of the nine velocity channel $c_i$ per lattice point $x_j$. The moments of $f$ given in \cref{eq:bte:moment:density,eq:bte:moment:velocity} can then be discretely expressed as follows:
+\begin{subequations}
+    \begin{equation}
+        \rho(x_j,t) = \sum_i f_i(x_j,t)
+        \label{eq:lbm:moment:density}
+    \end{equation}
+    \begin{equation}
+        u(x_j,t) = \frac{1}{\rho(x_j,i)} \sum_i c_i f_i(x_j,t)
+        \label{eq:lbm:moment:velocity}
+    \end{equation}
+    \label{eq:lbm:moment}
+\end{subequations}
+The discrete BGK-variant of the Boltzmann equation is then given by
+\begin{equation}
+    \underbrace{f_i(x_j + c_i \Delta t,~ t + \Delta t) - f_i(x_j, t)\vphantom{\frac{1}{2}}}_{streaming} ~=~ \underbrace{-\omega \left[ f_i(x_j,t) - f_i^{eq}(x_j,t) \right]\vphantom{\frac{1}{2}}}_{collision}
+    \label{eq:lbm:dicretized}
+\end{equation}
+where $\omega = \frac{1}{\tau}$ is the relaxation rate. The equilibrium distribution function is stated in \cref{eq:lbm:equilibrium} \cite{mohamad2019} with the mentioned weights $w_i$ for the corresponding velocity channels $c_i$.
+\begin{subequations}
+    \begin{equation}
+        f_i^{eq}(x_j,t) = w_i \rho(x_j,t) \left[ 1 + 3c_i \cdot u(x_j,t) + \frac{9}{2}(c_i \cdot u(x_j,t))^2 - \frac{3}{2} ||u(x_j,t)||^2 \right]
+    \end{equation}
+    \begin{equation}
+        w = \begin{pmatrix}
+            \frac{4}{9} & \frac{1}{9} & \frac{1}{9} & \frac{1}{9} & \frac{1}{9} & \frac{1}{36} & \frac{1}{36} & \frac{1}{36} & \frac{1}{36}
+        \end{pmatrix}
+    \end{equation}
+    \label{eq:lbm:equilibrium}
+\end{subequations}
+
+\subsection{Boundary Handling}
+\label{sec:methods:boundaries}
+
+\cref{eq:lbm:moment,eq:lbm:dicretized,eq:lbm:equilibrium} from the previous section are enough to implement a basic Lattice Boltzmann scheme with streaming and collision step. Until now, the scheme implies \glspl{PBC}. In the 2D case this would correspond to the surface of a torus. This section briefly discusses three different boundary conditions: rigid wall, moving wall and \glspl{PBC} with a pressure gradient.
+
+In principle there are to kinds of boundary conditions for \gls{LBM}:
+\begin{itemize}
+    \item dry-node: boundaries are located between nodes
+    \item wet-node: boundaries are placed on lattice nodes
+\end{itemize}
+In the following only dry-nodes are considered, since they are easier to implement and retain a second order accuracy as long as the physical wall is placed exactly halfway between the nodes.
+
+\subsubsection{Rigid Wall}
+
+A rigid wall applies a bounce-back boundary condition. This is modelled by simply reflecting the populations $i$ which hit the wall at time $t$ into opposite channels $\overline{i}$ at time $t + \Delta t$ as illustrated in \cref{fig:boundary:bounce-back}:
+\begin{equation}
+    f_{\overline{i}}(x_b,t+\Delta t) = f_i^*(x_b,t)
+    \label{eq:boundary:rigid}
+\end{equation}
+The rigid wall boundary condition is applied post-streaming, but requires the pre-streaming populations $f^*$. $x_b$ denotes a boundary node, non-boundary nodes are obviously not updated.
+
+\begin{figure}[ht!]
+    \centering
+    \begin{tikzpicture}[font=\scriptsize]
+        \foreach \x in {0,...,4}
+            \foreach \y in {0,...,2}
+                \node[draw, circle, fill, inner sep=1pt] at (\x, \y) {};
+        \draw[line width=1.2pt] (-0.5,0.5) -- +(5,0);
+        \draw[-Latex, color=red] (1,1) -- +(-0.5,-0.5) node[below] {$f_7$};
+        \draw[-Latex, color=red] (1,1) -- +(0,-0.5) node[below] {$f_4$};
+        \draw[-Latex, color=red] (1,1) -- +(.50,-0.5) node[below] {$f_8$};
+        \draw[-Latex, color=blue] (1,1) -- +(-0.5,0.5) node[above] {$f_6$};
+        \draw[-Latex, color=blue] (1,1) -- +(0,0.5) node[above] {$f_2$};
+        \draw[-Latex, color=blue] (1,1) -- +(0.5,0.5) node[above] {$f_5$};
+        \node[anchor=west, color=blue] at (2,1.75) {at time $t + \Delta t$};
+        \node[anchor=west, color=red] at (2,0.25) {at time $t$};
+        \draw[-Latex] (3.75,0.625) -- +(1,0) node[pos=1, above] {$U_w$};
+    \end{tikzpicture}
+    \caption[Schematic illustration of a bounce-back boundary condition with dry-nodes]{Schematic illustration of a bounce-back boundary condition with dry-nodes. For $U_w=0$ this represents a rigid wall, otherwise a moving wall.}
+    \label{fig:boundary:bounce-back}
+\end{figure}
+
+\subsubsection{Moving Wall}
+
+The moving wall is similar to the rigid wall, but additionally the populations will lose or gain velocity during interaction with the wall with is proportional to the wall velocity $U_w$:
+\begin{equation}
+    f_{\overline{i}}(x_b,t+\Delta t) = f_i^*(x_b,t) - 2\omega_i\rho_w \frac{c_i \cdot U_w}{c_s^2}
+    \label{eq:boundary:moving}
+\end{equation}
+Here $\rho_w$ denotes the density at the wall, that needs to be extrapolated from the bulk, see e.g. \cite{zou1997} Equation (19). A simple approximation can be made by assuming it is equal to the average density. Note that we only consider walls which move parallel to their direction as shown in \cref{fig:boundary:bounce-back}.
+
+\subsubsection{Periodic Boundary Conditions with Pressure Gradient}
+
+\glspl{PBC} can also be applied with a pressure variation $\Delta p = p_in - p_out$ between the inlet and outlet. This is e.g. the typical case for the flow in a pipe. For this, the following conditions need to be applied for a periodicity length $L = N \Delta x$:
+\begin{subequations}
+    \begin{equation}
+        p(x,t) = p(x+L,t) + \Delta p
+    \end{equation}
+    \begin{equation}
+        u(x,t) = u(x+L,t)
+    \end{equation}
+\end{subequations}
+Since in the LBM the pressure is directly related to the density through the ideal gas equation of state, $p=c_s^2\rho$ applies, where $c_s=\sqrt{\frac{1}{3}}$ is the speed of sound in lattice dimensions. Therefore, we can apply a density gradient rather than a pressure gradient, which is easier, since the density is directly related to $f$ (see \cref{eq:lbm:moment:density}).
+
+The boundary conditions are applied to the \gls{PDF} in the following way \cite{timm2016lattice}:
+\begin{subequations}
+    \begin{equation}
+        f_i^*(x_0, t) = f_i^{eq}(\rho_in, u_N) + \left( f_i^*(x_N, t) - f_i^{eq}(x_N,t) \right)
+    \end{equation}
+    \begin{equation}
+        f_i^*(x_{N+1}, t) = f_i^{eq}(\rho_out, u_N) + \left( f_i^*(x_1, t) - f_i^{eq}(x_1,t) \right)
+    \end{equation}
+    \label{eq:boundary:pbc-with-pressure-gradient}
+\end{subequations}
+This requires some extra nodes at the inlet ($x_0$) and outlet ($x_{N+1}$) outside the physical simulation domain. The extra node $x_0$, which is still in the physical domain of the previous pipe, is related to the last node $x_N$ or the simulation domain. The same applies to $x_1$ and $x_{N+1}$.
+
+Note that contrary to the rigid and moving wall, \glspl{PBC} with pressure gradient have to be applied pre-streaming.

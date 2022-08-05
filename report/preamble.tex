@@ -1,3 +1,5 @@
+% LTeX: enabled=false
+
 % language
 \usepackage[english]{babel}
 
@@ -5,28 +7,56 @@
 \usepackage[T1]{fontenc}
 \usepackage{lmodern}
 \renewcommand{\familydefault}{\sfdefault}
-\usepackage{csquotes}
 
 % spacing
-\usepackage{setspace}
-%\usepackage[onehalfspacing]{setspace}
+\usepackage[onehalfspacing]{setspace}
+% \usepackage[textwidth=15cm, textheight=22cm]{geometry}
+\usepackage{enumitem}
+\setlist{noitemsep}
 
 % bibliography
-\usepackage[backend=biber]{biblatex}
+\usepackage[backend=biber, sorting=none]{biblatex}
 \addbibresource{literature.bib}
 \DefineBibliographyStrings{english}{
     url={[Online]\adddot\addspace URL}
 }
+% FIX: warning: Font shape `T1/lmss/m/sc' in size <12> not available (Font)	Font shape `T1/lmr/m/sc' tried instead.
+% -> lmodern does not have a small caps (sc) font
+\renewcommand{\mkbibacro}[1]{{\footnotesize\MakeUppercase{#1}}}
 
 % media
 \usepackage{graphicx}
 \graphicspath{{media/}}
+\usepackage{subcaption}
+\usepackage[font=small, labelfont=bf]{caption}
+\usepackage[x11names]{xcolor}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta}
+\usetikzlibrary{calc}
+\usetikzlibrary{fit}
+\usetikzlibrary{math}
+\usetikzlibrary{positioning}
+\usetikzlibrary{shapes.arrows}
 
 % math
 \usepackage{amsmath}
+\usepackage{amsfonts}
 
 % code snippets
-\usepackage{listings}
+\usepackage[outputdir=out, cachedir=_minted/cache]{minted}
+\newminted{py}{ % environment: pycode
+    autogobble,
+    fontsize=\fontsize{8.5pt}{11pt},
+    frame=single,
+    framesep=8pt,
+    mathescape,
+    escapeinside=!!,
+    texcomments
+}
+\newmintinline{py}{} % command: pyinline
+
+% quoting
+\usepackage{csquotes}
 
 % links
 \usepackage[pdfencoding=auto]{hyperref}
@@ -39,3 +69,8 @@
     bookmarksnumbered=true,
     pageanchor=true,
 }
+\usepackage[capitalize, nameinlink, noabbrev]{cleveref}
+
+% glossaries
+\usepackage[nowarn]{glossaries}
+\glsdisablehyper % since there is no \makeglossaries

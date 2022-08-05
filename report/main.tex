@@ -5,15 +5,17 @@
 \documentclass[a4paper,12pt]{article}
 
 % titlepage/metadata definitions
-\newcommand{\thetitle}{High Performance Computing with Python}
+\newcommand{\thetitle}{High Performance Computing: Fluid Mechanics with Python}
 \newcommand{\thesubtitle}{-- Final Report --}
 \newcommand{\theauthor}{Peter Würth}
 \newcommand{\thematnr}{5306261}
 \newcommand{\theemail}{peter.wuerth@students.uni-freiburg.de}
 \newcommand{\thedate}{\today}
+\newcommand{\therepository}{\href{https://github.com/petwu/hpc-with-python}{https://github.com/petwu/hpc-with-python}}
 
+% settings
 \input{preamble}
-\usepackage{fancyhdr}
+\input{glossaries}
 
 \begin{document}
 
@@ -31,22 +33,22 @@
     \end{titlepage}
 
     % table of contents
-    \pagenumbering{gobble}
+    \pagenumbering{roman}
+    \thispagestyle{empty}
     \pdfbookmark{Contents}{toc}
     \tableofcontents
+    \clearpage
 
     % main content
     \pagenumbering{arabic}
     \include{content/introduction}
-    \include{content/lattice_boltzmann}
+    \include{content/methods}
     \include{content/implementation}
     \include{content/experiments}
     \include{content/conclusions}
 
     % bibliography
     \pdfbookmark{References}{bib}
-	% TODO: remove \nocite
-	\nocite{*}
     \printbibliography[title=References]
 
 \end{document}

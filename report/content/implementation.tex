@@ -1,1 +1,226 @@
 \section{Implementation}
+
+In this chapter, the concrete implementation of the \gls{LBM} using Python and the parallelization using \glsentryfull{MPI} are discussed.
+
+\subsection{Lattice Representation}
+
+The physical lattice domain is represented using a D2Q9 discretization and with the $y$-dimension being the first (index 0) and the $x$-dimension being the second (index 1) axis. The origin is considered to be in the upper left corner as indicated in \cref{fig:discretization:grid}.
+
+The main quantity representing the state of the simulation is the discretized \glsentryfull{PDF} containing the occupation numbers of all channels for all lattice points. The respective variable is called \pyinline{pdf_cij} and holds a single contiguous NumPy array of shape $(9, L_y, L_x)$ where $L_x$ and $L_y$ are the respective lattice dimensions. The suffix of the variable name indicates the number of array dimensions as well as their meaning: \pyinline{c} is the channel index, \pyinline{i} and \pyinline{j} are the lattice position in $x$- and $y$-direction.
+
+Similarly, the array for the density and velocity are named \pyinline{density_ij} and \pyinline{velocity_aij}, where \pyinline{a} denotes the Cartesian axis ($x$ or $y$). They are of shape $(L_y,L_x)$ and $(2,L_y,L_x)$ respectively.
+
+\subsection{Simulation Step}
+
+A single simulation step consists of streaming, collision, boundary handling and communication as listed in \cref{code:simulation-step}.
+
+\begin{listing}[ht!]
+    \begin{pycode}
+        def step():
+            communicate(pdf_cij)                # see \cref{code:communication}
+            boundary_handling(pdf_cij, True)    # see \cref{code:boundaries}
+            streaming_step(pdf_cij)             # see \cref{code:streaming}
+            boundary_handling(pdf_cij, False)   # see \cref{code:boundaries}
+            collision_step(pdf_cij, omega)      # see \cref{code:collision}
+    \end{pycode}
+    \caption{Single \gls{LBM} Step}
+    \label{code:simulation-step}
+\end{listing}
+
+Details on each step are elaborated in the following sections. Note that the communication step is only required in case the simulation runs in parallel.
+
+\subsubsection{Streaming}
+
+Streaming can be implemented using the \pyinline{numpy.roll} function as shown in \cref{code:streaming}. This function shifts the array elements along the specified axes by the distance given by the \pyinline{channel_ca} array. For example, a roll operation for channel 1 along axis 0 will assign $f_{1,i,j+1} \gets f_{1,i,j}$. This is done once for all 9 velocity channels with respect to both Cartesian axes. The \pyinline{channel_ca} array implements the D2Q9 discretization as given by \cref{fig:discretization:d2q9}.
+
+Thereby, \pyinline{numpy.roll} automatically applies \glsentrylongpl{PBC}.
+
+\begin{listing}[ht!]
+    \begin{pycode}
+        import numpy as np
+    
+        # [Y, X] shift (note: grid origin is in the top-left corner)
+        channel_ca = np.array([[0, 0],    # center
+                               [0, 1],    # east
+                               [-1, 0],   # north
+                               [0, -1],   # west
+                               [1, 0],    # south
+                               [-1, 1],   # north-east
+                               [-1, -1],  # north-west
+                               [1, -1],   # south-west
+                               [1, 1]])   # south-east
+    
+        def streaming_step(pdf_cij: np.ndarray) -> None:
+            # for each channel, shift into the corresponding direction
+            for i in range(9):
+                pdf_cij[i] = np.roll(pdf_cij[i], shift=channel_ca[i], axis=(0, 1))
+    \end{pycode}
+    \caption{Streaming Operation}
+    \label{code:streaming}
+\end{listing}
+
+\subsubsection{Collision}
+
+The collision part from \cref{eq:lbm:dicretized} can easily be implemented by translating the velocity update into Einstein notation:
+\begin{equation}
+    u_{aij} = \frac{1}{\rho_{ij}} c_{ca} f_{cij}
+    \label{eq:collision-einstein}
+\end{equation}
+
+With this, the velocity update can be implemented using \pyinline{numpy.einsum}, which implements the Einstein notation. This has the advantage that it avoids costly Python loops and uses vectorized NumPy code instead.
+
+\cref{code:collision} shows a simple implementation of the collision step, which first performs a density and velocity update, then calculates the equilibrium \gls{PDF} $f^{eq}$ according to \cref{eq:lbm:equilibrium} and finally applies the collision step with a given relaxation rate $\omega$.
+
+\begin{listing}[ht!]
+    \begin{pycode}
+        import numpy as np
+    
+        weight_c = np.array([4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36])
+    
+        def equilibrium(velocity_aij: np.ndarray, density_ij: np.ndarray) -> np.ndarray:
+            uc_cij = (velocity_aij.T @ channel_ca.T).T
+            uu_ij = np.linalg.norm(velocity_aij, axis=0) ** 2
+            return weight_c[..., np.newaxis, np.newaxis] * density_ij[np.newaxis, ...]\
+                * (1 + 3*uc_cij + 4.5*uc_cij**2 - 1.5*uu_ij[np.newaxis, ...])
+    
+        def collision_step(pdf_cij: np.ndarray, omega: float) -> np.ndarray:
+            density_ij = np.sum(pdf_cij, axis=0)
+            velocity_aij = np.einsum("cij,ca->aij", pdf_cij, channel_ca) / density_ij
+            pdf_cij += omega * (equilibrium(velocity_aij, density_ij) - pdf_cij)
+    \end{pycode}
+    \caption{Collision Operation}
+    \label{code:collision}
+\end{listing}
+
+\subsubsection{Boundary Conditions}
+
+In \cref{code:simulation-step}, the boundary handling gets applied twice, once for the pre-streaming (periodic boundary condition with pressure gradient) boundaries and once for the post-streaming boundaries (rigid or moving wall).
+
+As shown in \cref{code:boundaries}, the first call creates a copy of the \gls{PDF}, since the pre-streaming \gls{PDF} (\pyinline{pdf_pre_cij}) is required in order to apply the boundary conditions. \pyinline{boundaries} is a dictionary of lists of boundary conditions that are then applied one after the other. This allows for a configurable set of boundaries, that each share a common interface like an \pyinline{apply()} method, a boolean \pyinline{pre_streaming} property or the list of lattice sides (left, right, top, bottom) they should be applied to.
+
+\begin{listing}[ht!]
+    % WORKAROUND: for some reason \cref with multiple labels does not work with minted's texcomments option
+    \def\bdryref{\cref{eq:boundary:rigid,eq:boundary:moving,eq:boundary:pbc-with-pressure-gradient}}
+    \begin{pycode}
+        import numpy as nptexcomments
+
+        def boundary_handling(pdf_cij: np.ndarray, pre_streaming: bool) -> None:
+            global pdf_pre_cij
+            if before_streaming:
+                pdf_pre_cij = pdf_cij.copy()
+            for b in boundaries[before_streaming]:
+                b.apply(pdf_cij, pdf_pre_cij)  # see \bdryref
+    \end{pycode}
+    \caption{Boundary Conditions}
+    \label{code:boundaries}
+\end{listing}
+
+The exact implementations of each type of boundary conditions follow the equations in \cref{sec:methods:boundaries}. Since this involves mainly copying of some \gls{PDF} values, the exact code is omitted here for the sake of brevity.
+
+\subsection{Parallelization}
+\label{sec:implementation:parallelization}
+
+In theory, the \gls{PDF} allows for two possible approaches: parallelize in velocity direction space or the spatial domain. The first one is not a good choice, since there are only 9 channels and therefore the parallelism would be limited. Also, it would require communication during the collision step. Therefore, the second approach of a spatial decomposition is taken, which allows parallelization with much more processes.
+
+This spatial decomposition requires communication before the streaming step, since some occupation numbers get moved past the subdomain boundaries. For this purpose, each subdomain is padded with additional ghost cells for storing a copy of adjacent values from neighboring subdomains. \cref{fig:domain-decomposition} illustrates this for a $3\times2$ decomposition. Each subdomain has to communicate four times with its neighbors: to the right and bottom as shown in \cref{fig:domain-decomposition} plus their reverse counterparts to left and top.
+
+\begin{figure}[ht!]
+    \centering
+    \begin{tikzpicture}[x=3mm, y=3mm]
+        % parameters
+        \def\dx{3} % number of domains in x direction
+        \def\dy{2} % number of domains in y direction
+        \def\dw{6} % (physical) domain size in x direction
+        \def\dh{6} % (physical) domain size in y direction
+        \def\sw{2} % space width in number of cells between domains
+
+        % domains
+        \foreach[count=\rank] \dyi in {0,...,\numexpr\dy-1} {
+            \foreach[evaluate=\dyi as \rank using int(\dyi*\dx+\dxi)] \dxi in {0,...,\numexpr\dx-1} {
+                % no ghost cells at outer boundaries
+                \ifthenelse{1=0}{
+                    \ifthenelse{\dxi=0}
+                        {\def\bxs{1}\def\bxe{-1}}
+                        {\ifthenelse{\dxi=\numexpr\dx-1}
+                            {\def\bxs{0}\def\bxe{-1}}
+                            {\def\bxs{0}\def\bxe{0}}}
+                    \ifthenelse{\dyi=0}
+                        {\def\bys{-1}\def\bye{1}}
+                        {\ifthenelse{\dyi=\numexpr\dy-1}
+                            {\def\bys{0}\def\bye{1}}
+                            {\def\bys{0}\def\bye{0}}}}
+                    {\def\bxs{0}\def\bxe{0}\def\bys{0}\def\bye{0}}
+                % corners (top-left + bottom-right)
+                \def\tl{{\dxi*(\dw+2+\sw)+\bxs},{-\dyi*(\dh+2+\sw)+\bys}}
+                \def\brx{{\dw+2+\bxe}}
+                \def\bry{{-\dh-2+\bye}}
+                \def\br{\brx,\bry}
+                % rank tag
+                \node[anchor=south west, inner sep=0, yshift=1mm] at (\tl) {\scriptsize rank \rank};
+                % background
+                \draw[fill=Snow2] (\tl) rectangle +(\br);
+                % physical domain
+                \draw[fill=PaleGreen2] ($(\tl)+(+1-\bxs,-1-\bys)$) rectangle +(\dw,-\dh);
+                % communicated cells
+                \ifthenelse{\rank=0}{
+                    \draw[fill=DeepSkyBlue1] ($(\tl)+(\dw,0)$) rectangle +(1,\bry);
+                }{}
+                \ifthenelse{\rank=1}{
+                    \draw[fill=DeepSkyBlue1] (\tl) rectangle +(1,\bry);
+                }{}
+                \ifthenelse{\rank=2}{
+                    \draw[fill=DeepSkyBlue1] ($(\tl)+(0,-\dh)$) rectangle +(\brx,-1);
+                }{}
+                \ifthenelse{\rank=5}{
+                    \draw[fill=DeepSkyBlue1] (\tl) rectangle +(\brx,-1);
+                }{}
+                % ghost cells
+                \draw[step=1, line width=0.25mm] (\tl) grid +(\br);
+                % arrows
+                \ifthenelse{\rank=1}{
+                    \draw[{Triangle[length=10pt, width=12pt]}-, line width=5pt, color=DodgerBlue4] ($(\tl)+(0.5,-\dh/2-1)$) -- +(-2-\sw,0);
+                }{}
+                \ifthenelse{\rank=5}{
+                    \draw[{Triangle[length=10pt, width=12pt]}-, line width=5pt, color=DodgerBlue4] ($(\tl)+(\dw/2+1,-0.5)$) -- +(0,2+\sw);
+                }{}
+            }
+        }
+    \end{tikzpicture}
+    \caption[Domain decomposition and communication strategy]{Domain decomposition and communication strategy. Green lattice cells are the physical simulation domain, gray cells are ghost cells for communication. In each step, the outermost physical cells are communicated to the adjacent ghost cells as indicated by the blue cells and arrows. Communication to the left and up work likewise.}
+    \label{fig:domain-decomposition}
+\end{figure}
+
+Implementation of the inter-process communication is done using mpi4py bindings for the \gls{MPI} library. The respective code is outlined in \cref{code:communication}. It uses a Cartesian communicator to represent the $X \times Y$ subdomains. The communicator is instantiated with \pyinline{periods=(False, False)}, since for the lid-driven cavity we anyway apply bounce-back boundary conditions to the outer domain boundaries. Therefore, there is no need to communicate the outer boundaries of the edge domains. Respectively, introducing ghost cells only for the interior domain boundaries, but not the outer boundaries of edge domains, is sufficient. Also, the boundary conditions are only applied to the concerned edge domains, since for the interior edge domains they would simply get overridden in the next communication step anyway.
+
+\begin{listing}[ht!]
+    \begin{pycode}
+        import mpi4py.MPI as mpi
+        import numpy as np
+
+        # initialize communicator
+        comm = mpi.COMM_WORLD.Create_cart(dims=(Y, X), periods=(False, False))
+        # get ranks of neighboring subdomains
+        # (s/d: source/destination, l/r/d/u: left/right/down/up)
+        sl, dl = comm.Shift(1, -1)
+        sr, dr = comm.Shift(1, 1)
+        sd, dd = comm.Shift(0, 1)
+        su, du = comm.Shift(0, -1)
+
+        def communicate(pdf_cij):
+            # send left
+            sendbuf = np.ascontiguousarray(pdf_cij[:, :, 1])
+            recvbuf = pdf_cij[:, :, -1].copy()
+            comm.Sendrecv(sendbuf, dl, recvbuf=recvbuf, source=sl)
+            pdf_cij[:, :, -1] = recvbuf
+            # send right, down, up (abbreviated)
+            comm.Sendrecv(pdf_cij[:, :, -2], dr, recvbuf=pdf_cij[:, :, 0], source=sr)
+            comm.Sendrecv(pdf_cij[:, -2, :], dd, recvbuf=pdf_cij[:, 0, :], source=sd)
+            comm.Sendrecv(pdf_cij[:, 1, :], du, recvbuf=pdf_cij[:, -1, :], source=su)
+    \end{pycode}
+    \caption{Communication Operation}
+    \label{code:communication}
+\end{listing}
+
+In each simulation step, one \pyinline{Sendrecv} call for all four direction is made, which simultaneously sends data in one direction and receives it from the opposite direction.
+
+Since mpi4py requires that the transferred data is contiguous in memory, both send and receive buffers are cast into contiguous arrays using either the \pyinline{numpy.ascontiguousarray} function or an explicit copy operation as demonstrated for the first \pyinline{Sendrecv} call. For brevity, this was omitted from the other three \pyinline{Sendrecv} calls.

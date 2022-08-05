@@ -1,1 +1,7 @@
 \section{Introduction}
+
+The \gls{LBM} is a numerical scheme based on a discretization of the \gls{BTE} used to simulate fluid dynamics, introduced by \citeauthor{McNamara1988LBM} \cite{McNamara1988LBM}.
+
+This report discusses an implementation of the \gls{LBM} and analyses it's scaling properties in the context of the course \textit{High-Performance Computing: Fluid Mechanics with Python} at the University of Freiburg. The implementation is done completely in Python using the NumPy\footnote{NumPy version 1.23} \cite{NumPy} library for efficient numerical calculations and the \gls{MPI}\footnote{MPI version 4.0} \cite{MPI40} with mpi4py\footnote{mpi4py version 3.1} \cite{mpi4py} as bindings for the parallelization. For simplicity, the problem is restricted to the 2D case.
+
+The code associated with this report as well as introduction on how to run it can be found on GitHub\footnote{\therepository}.

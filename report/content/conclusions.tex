@@ -1,1 +1,11 @@
 \section{Conclusions}
+
+This report demonstrated a parallel implementation of the \glsentryfull{LBM} for simulating fluid dynamics. Implementation was done in the Python programming language and the NumPy library for efficient numerical calculations. For the parallelization, the \glsentryfull{MPI} and the respective Python bindings mpi4py were employed.
+
+The implementation was validated using several experiments including shear wave decay, Couette flow, Poiseuille flow and lid-driven cavity. The obtained results coincide with the expected analytical solutions, therefore it can be assumed that the implementation is correct.
+
+Furthermore, the scaling behavior of the parallelized implementation was tested by simulating the lid-driven cavity with different number of processes on the bwUniCluster. This showed, that the \gls{LBM} has good scaling behavior. While the subdomain size handled by each MPI process is large enough, it scales linearly. Once the cost imposed by the necessary communication between neighboring subdomains outweighs the benefit gained by the parallelization, the speedup decreases and eventually stagnates.
+
+\section*{Acknowledgements}
+
+The author acknowledges support by the state of Baden-Württemberg through bwHPC.
