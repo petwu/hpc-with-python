@@ -1,5 +1,4 @@
 from matplotlib import animation, pyplot as plt
-from IPython import display
 from ._stages import PlotStages
 import numpy as np
 import os
@@ -191,6 +190,7 @@ class DensityPlot:
             # html contains: animation_object_with_hash = new Animation(...);
             # append:        animation_object_with_hash.play_animation();
             html = re.sub(r"(\n( +\w+) = new Animation\([^)]+\);?)", "\\1\n\\2.play_animation();", html)
+        from IPython import display
         display.display(display.HTML(html))
 
     def close(self):
