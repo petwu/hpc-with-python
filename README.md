@@ -10,6 +10,8 @@ with Python_ at the University of Freiburg in the summer semester 2022.
 - [Setup](#setup)
 - [Scaling Tests with Lid-Driven Cavity](#scaling-tests-with-lid-driven-cavity)
 - [Milestones](#milestones)
+- [Report](#report)
+- [Reproducibility](#reproducibility)
 - [Tests](#tests)
 
 ## Animation: Lid-Driven Cavity
@@ -31,7 +33,7 @@ In order to run the parallelized code, you need some MPI implementation like [Op
 
 ## Scaling Tests with Lid-Driven Cavity
 
-A parameterizable implementation of the lid-driven cavity experiment can be run with the
+A parametrizable implementation of the lid-driven cavity experiment can be run with the
 [lid_driven_cavity.py](lid_driven_cavity.py) script. Run
 ```sh
 python3 lid_driven_cavity.py --help
@@ -51,6 +53,24 @@ Use [milestone.py](milestone.py) in order to run a specific milestone. See
 python3 milestone.py --help
 ```
 for usage information.
+
+## Report
+
+The final report is located at [report/main.pdf](main.report/main.pdf).
+
+Building the report:
+```sh
+$ cd report
+$ make report
+```
+
+## Reproducibility
+
+All plots with results from experiments from the report can be reproduced:
+```
+$ cd report
+$ make plots
+```
 
 ## Tests
 
