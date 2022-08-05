@@ -85,8 +85,7 @@ def plot_velocity_profile_evolution(filename: str,
 
 
 def plot_velocity_field(filename: str, args: argparse.Namespace, velocity_field: np.ndarray):
-    fig, ax = plt.subplots(figsize=(5, 3))
-    ax.set_title(f"$t={args.n_steps}$")
+    fig, ax = plt.subplots(figsize=(5, 2))
     ax.set_ylabel("$y$ dimension")
     ax.set_xlabel("$x$ dimension")
     ax.invert_yaxis()
@@ -103,7 +102,7 @@ def plot_velocity_field(filename: str, args: argparse.Namespace, velocity_field:
 
 
 def plot_density_gradient(filename: str, args: argparse.Namespace, density: np.ndarray):
-    plt.figure(figsize=(4, 3))
+    plt.figure(figsize=(4, 2))
     plt.xlabel("$x$ dimension")
     plt.ylabel("density $\\rho$")
     plt.plot(density[args.size_y//2, 1:-1], label=f"$\\rho(y={args.size_y//2}, x, t={args.n_steps})$")
