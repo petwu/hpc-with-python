@@ -1,8 +1,51 @@
 {
-  "folders": [{ "path": "."}],
+  "folders": [
+    {
+      "path": ".",
+      "name": "HPC with Python"
+    }
+  ],
   "settings": {
+    "[latex]": {
+      "editor.wordWrap": "on",
+      "editor.wrappingStrategy": "advanced"
+    },
     "jupyter.notebookFileRoot": "${workspaceFolder}",
     "latex-workshop.bibtex-format.sort.enabled": true,
-    "latex-workshop.latex.recipe.default": "latexmk (lualatex)"
+    "latex-workshop.latex.recipe.default": "latexmk (lualatex)",
+    "latex-workshop.latex.outDir": "%DIR%/out",
+    "latex-workshop.latex.tools": [
+      {
+        "name": "lualatexmk",
+        "command": "latexmk",
+        "args": [
+          "-shell-escape", // <-- added for minted
+          "-synctex=1",
+          "-interaction=nonstopmode",
+          "-file-line-error",
+          "-lualatex",
+          "-outdir=%OUTDIR%",
+          "%DOC%"
+        ],
+        "env": {}
+      }
+    ],
+    "ltex.configurationTarget": {
+      "dictionary": "workspaceExternalFile",
+      "disabledRules": "workspaceExternalFile",
+      "hiddenFalsePositives": "workspaceExternalFile"
+    },
+    "ltex.dictionary": {
+      "en-US": [":../report/ltex/dictionary.en-US.txt"]
+    },
+    "ltex.hiddenFalsePositives": {
+      "en-US": [":../report/ltex/hiddenFalsePositives.en-US.txt"]
+    },
+    "ltex.latex.commands": {
+      "\\pyinline{}": "dummy"
+    },
+    "ltex.latex.environments": {
+      "pycode": "ignore"
+    }
   }
 }
