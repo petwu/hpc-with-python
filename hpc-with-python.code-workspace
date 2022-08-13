@@ -25,6 +25,7 @@
           "-file-line-error",
           "-lualatex",
           "-outdir=%OUTDIR%",
+          "-deps-out=%OUTDIR%/deps.mk",
           "%DOC%"
         ],
         "env": {}
