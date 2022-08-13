@@ -6,7 +6,7 @@ In this chapter, the concrete implementation of the \gls{LBM} using Python and t
 
 The physical lattice domain is represented using a D2Q9 discretization and with the $y$-dimension being the first (index 0) and the $x$-dimension being the second (index 1) axis. The origin is considered to be in the upper left corner as indicated in \cref{fig:discretization:grid}.
 
-The main quantity representing the state of the simulation is the discretized \glsentryfull{PDF} containing the occupation numbers of all channels for all lattice points. The respective variable is called \pyinline{pdf_cij} and holds a single contiguous NumPy array of shape $(9, L_y, L_x)$ where $L_x$ and $L_y$ are the respective lattice dimensions. The suffix of the variable name indicates the number of array dimensions as well as their meaning: \pyinline{c} is the channel index, \pyinline{i} and \pyinline{j} are the lattice position in $x$- and $y$-direction.
+The main quantity representing the state of the simulation is the discretized \glsentryfull{PDF} containing the occupation numbers of all channels for all lattice points. The respective variable is called \pyinline{pdf_cij} and holds a single contiguous NumPy array of shape $(9, L_y, L_x)$ where $L_x$ and $L_y$ are the respective lattice dimensions. The suffix of the variable name indicates the number of array dimensions as well as their meaning: \pyinline{c} is the channel index, \pyinline{i} and \pyinline{j} are the lattice position in $y$- and $x$-direction.
 
 Similarly, the array for the density and velocity are named \pyinline{density_ij} and \pyinline{velocity_aij}, where \pyinline{a} denotes the Cartesian axis ($x$ or $y$). They are of shape $(L_y,L_x)$ and $(2,L_y,L_x)$ respectively.
 
@@ -67,7 +67,7 @@ The collision part from \cref{eq:lbm:dicretized} can easily be implemented by tr
     \label{eq:collision-einstein}
 \end{equation}
 
-With this, the velocity update can be implemented using \pyinline{numpy.einsum}, which implements the Einstein notation. This has the advantage that it avoids costly Python loops and uses vectorized NumPy code instead.
+With this, the velocity update can be implemented using the \pyinline{numpy.einsum} function, which implements the Einstein notation. This provides the advantage of avoiding costly Python loops and using vectorized NumPy code instead.
 
 \cref{code:collision} shows a simple implementation of the collision step, which first performs a density and velocity update, then calculates the equilibrium \gls{PDF} $f^{eq}$ according to \cref{eq:lbm:equilibrium} and finally applies the collision step with a given relaxation rate $\omega$.
 
@@ -96,7 +96,7 @@ With this, the velocity update can be implemented using \pyinline{numpy.einsum},
 
 In \cref{code:simulation-step}, the boundary handling gets applied twice, once for the pre-streaming (periodic boundary condition with pressure gradient) boundaries and once for the post-streaming boundaries (rigid or moving wall).
 
-As shown in \cref{code:boundaries}, the first call creates a copy of the \gls{PDF}, since the pre-streaming \gls{PDF} (\pyinline{pdf_pre_cij}) is required in order to apply the boundary conditions. \pyinline{boundaries} is a dictionary of lists of boundary conditions that are then applied one after the other. This allows for a configurable set of boundaries, that each share a common interface like an \pyinline{apply()} method, a boolean \pyinline{pre_streaming} property or the list of lattice sides (left, right, top, bottom) they should be applied to.
+As shown in \cref{code:boundaries}, the first call creates a copy of the \gls{PDF}, since the pre-streaming \gls{PDF} (\pyinline{pdf_pre_cij}) is required in order to apply the boundary conditions. The \pyinline{boundaries} variable holds a dictionary of lists of boundary conditions that are then applied consecutively. This allows for a configurable set of boundaries, that each share a common interface like an \pyinline{apply()} method, a boolean \pyinline{pre_streaming} property or the list of lattice sides (left, right, top, bottom) they should be applied to.
 
 \begin{listing}[ht!]
     % WORKAROUND: for some reason \cref with multiple labels does not work with minted's texcomments option
@@ -115,14 +115,14 @@ As shown in \cref{code:boundaries}, the first call creates a copy of the \gls{PD
     \label{code:boundaries}
 \end{listing}
 
-The exact implementations of each type of boundary conditions follow the equations in \cref{sec:methods:boundaries}. Since this involves mainly copying of some \gls{PDF} values, the exact code is omitted here for the sake of brevity.
+The exact implementations of each type of boundary conditions follow the equations in \cref{sec:methods:boundaries}. Since this mainly involves copying of some \gls{PDF} values, the exact code is omitted here for the sake of brevity.
 
 \subsection{Parallelization}
 \label{sec:implementation:parallelization}
 
 In theory, the \gls{PDF} allows for two possible approaches: parallelize in velocity direction space or the spatial domain. The first one is not a good choice, since there are only 9 channels and therefore the parallelism would be limited. Also, it would require communication during the collision step. Therefore, the second approach of a spatial decomposition is taken, which allows parallelization with much more processes.
 
-This spatial decomposition requires communication before the streaming step, since some occupation numbers get moved past the subdomain boundaries. For this purpose, each subdomain is padded with additional ghost cells for storing a copy of adjacent values from neighboring subdomains. \cref{fig:domain-decomposition} illustrates this for a $3\times2$ decomposition. Each subdomain has to communicate four times with its neighbors: to the right and bottom as shown in \cref{fig:domain-decomposition} plus their reverse counterparts to left and top.
+This spatial decomposition requires communication before the streaming step, since some occupation numbers get moved past the subdomain boundaries. For this purpose, each subdomain is padded with additional ghost cells for storing a copy of adjacent values from neighboring subdomains. \cref{fig:domain-decomposition} illustrates this for a $3\times2$ decomposition. Each subdomain has to communicate four times with its neighbors: to the right and bottom plus their reverse counterparts to left and top.
 
 \begin{figure}[ht!]
     \centering
@@ -190,8 +190,6 @@ This spatial decomposition requires communication before the streaming step, sin
     \label{fig:domain-decomposition}
 \end{figure}
 
-Implementation of the inter-process communication is done using mpi4py bindings for the \gls{MPI} library. The respective code is outlined in \cref{code:communication}. It uses a Cartesian communicator to represent the $X \times Y$ subdomains. The communicator is instantiated with \pyinline{periods=(False, False)}, since for the lid-driven cavity we anyway apply bounce-back boundary conditions to the outer domain boundaries. Therefore, there is no need to communicate the outer boundaries of the edge domains. Respectively, introducing ghost cells only for the interior domain boundaries, but not the outer boundaries of edge domains, is sufficient. Also, the boundary conditions are only applied to the concerned edge domains, since for the interior edge domains they would simply get overridden in the next communication step anyway.
-
 \begin{listing}[ht!]
     \begin{pycode}
         import mpi4py.MPI as mpi
@@ -199,6 +197,7 @@ Implementation of the inter-process communication is done using mpi4py bindings 
 
         # initialize communicator
         comm = mpi.COMM_WORLD.Create_cart(dims=(Y, X), periods=(False, False))
+
         # get ranks of neighboring subdomains
         # (s/d: source/destination, l/r/d/u: left/right/down/up)
         sl, dl = comm.Shift(1, -1)
@@ -220,6 +219,8 @@ Implementation of the inter-process communication is done using mpi4py bindings 
     \caption{Communication Operation}
     \label{code:communication}
 \end{listing}
+
+Implementation of the inter-process communication is done using mpi4py bindings for the \gls{MPI} library. The respective code is outlined in \cref{code:communication}. It uses a Cartesian communicator to represent the $X \times Y$ subdomains. The communicator is instantiated with \pyinline{periods=(False, False)}, since for the lid-driven cavity bounce-back boundary conditions are applied to the outer domain boundaries. Therefore, there is no need to communicate the outer boundaries of the edge domains. Respectively, introducing ghost cells only for the interior domain boundaries, but not the outer boundaries of edge domains, is sufficient. Furthermore, the boundary conditions are only applied to the concerned edge domains, because they would get overridden within interior edge domains in the next communication step anyway.
 
 In each simulation step, one \pyinline{Sendrecv} call for all four direction is made, which simultaneously sends data in one direction and receives it from the opposite direction.
 

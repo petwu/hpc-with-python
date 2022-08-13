@@ -1,10 +1,10 @@
 \section{Experiments}
 
-This chapter presents the results obtained from various experiments performed with the implementation introduced in the previous chapter in order to validate the correctness of the implementation and test it's scaling behavior.
+This chapter presents the results obtained from various experiments performed with the implementation introduced in the previous chapter in order to validate the correctness of the implementation and test its scaling behavior.
 
 \subsection{Shear Wave Decay}
 
-Shear wave decay describes the time evolution of a velocity or density perturbation, which converges to zero due to the effects of viscosity. In order to have a known analytical solution to compare the simulation results against, the experiments use sinusoidal perturbation as initial conditions and observes how they evolve over time. These initial perturbation are given in \cref{eq:swd:init-density,eq:swd:init-velocity} for an experiment with a density or velocity perturbation respectively. The initial density is given by $\rho_0$ and $\varepsilon$ defines the amplitude of the sine and therefore the max. perturbation.
+Shear wave decay describes the time evolution of a velocity or density perturbation, which converges to zero due to the effects of viscosity. In order to have a known analytical solution to compare the simulation results against, the experiments use sinusoidal perturbation as initial conditions and observe how they evolve over time. These initial perturbation are given in \cref{eq:swd:init-density,eq:swd:init-velocity} for an experiment with a density or velocity perturbation respectively. The initial density is given by $\rho_0$ and $\varepsilon$ defines the amplitude of the sine and therefore the max. perturbation.
 \begin{subequations}
     \begin{equation}
         \rho(x, t=0) = \rho_0 + \varepsilon~\text{sin}\left(\frac{2 \pi x}{L_x}\right)
@@ -16,7 +16,7 @@ Shear wave decay describes the time evolution of a velocity or density perturbat
     \end{equation}
 \end{subequations}
 
-The analytical solution is given by the Navier-Stokes equations for incompressible fluids:
+An analytical description of the expected behavior is obtained by considering the Navier-Stokes equations for incompressible fluids:
 \begin{equation}
     \frac{\partial u}{\partial t} + (u\cdot\nabla)u + \frac{1}{\rho}\nabla p = \nu\nabla^2u
     \label{eq:swd:navier-stokes}
@@ -26,13 +26,13 @@ Since there is no analytical solution, we make two assumptions:
     \item the perturbation is small, therefore the velocity gradient is small enough to neglect the non-linear term $(u\cdot\nabla)u$
     \item the pressure gradient $\nabla p$ is small and negligible
 \end{enumerate}
-This yields then following analytical solution:
+This then yields the following analytical solution:
 \begin{equation}
     a(t) = a_0 + \varepsilon~\text{exp}\left(-\nu \left(\frac{2\pi}{L}\right)^2 t\right)
     \label{eq:swd:analytica-solution}
 \end{equation}
 
-It describes a decaying exponential governed by the viscosity $\nu$ and the initial perturbation $\varepsilon$. The additional offset $a_0$ corresponds to $\rho_0$ in case of a sinusoidal density perturbation and is $0$ for the sinusoidal velocity perturbation. \cref{fig:swd:sines,fig:swd:density:decay,fig:swd:velocity:multiple-omega} show how the perturbation for both the sinusoidal density and velocity evolve over time and how the compare to the analytical solution given by \cref{eq:swd:analytica-solution}.
+It describes a decaying exponential governed by the viscosity $\nu$ and the initial perturbation $\varepsilon$. The additional offset $a_0$ corresponds to $\rho_0$ in case of a sinusoidal density perturbation and is $0$ for the sinusoidal velocity perturbation. \cref{fig:swd:sines,fig:swd:density:decay,fig:swd:velocity:multiple-omega} show how the perturbation for both the sinusoidal density and velocity evolve over time and how they compare to the analytical solution given by \cref{eq:swd:analytica-solution}.
 
 \begin{figure}[ht!]
     \begin{subfigure}{0.514\linewidth}
@@ -51,7 +51,7 @@ It describes a decaying exponential governed by the viscosity $\nu$ and the init
     \label{fig:swd:sines}
 \end{figure}
 
-As expected, the perturbations retain their sinusoidal shapes but lose amplitude over time, compare \cref{fig:swd:sines}. While for the velocity decay the sinusoidal perturbation is stationary in position, the sinusoidal density decay is not, since high-density areas constantly flowing into low-density areas while converging to the equilibrium state. Therefore, observing the density at a fixed $x$-position results in an oscillating decay where only the peaks align with the analytical solution as depicted in \cref{fig:swd:density:single-omega}. The velocity decay on the other hand completely aligns with the analytical solution as seen in \cref{fig:swd:velocity:multiple-omega}.
+As expected, the perturbations retain their sinusoidal shapes but lose amplitude over time, compare \cref{fig:swd:sines}. While for the velocity decay the sinusoidal perturbation is stationary in position, the sinusoidal density decay is not, since high-density areas are constantly flowing into low-density areas while converging to the equilibrium state. Therefore, observing the density at a fixed $x$-position results in an oscillating decay where only the peaks align with the analytical solution as depicted in \cref{fig:swd:density:single-omega}. The velocity decay on the other hand completely aligns with the analytical solution as seen in \cref{fig:swd:velocity:multiple-omega}.
 
 \begin{figure}[ht!]
     \begin{subfigure}{\linewidth}
@@ -77,7 +77,7 @@ As expected, the perturbations retain their sinusoidal shapes but lose amplitude
     \label{fig:swd:velocity:multiple-omega}
 \end{figure}
 
-The measured decay can be used to determine the kinematic viscosity $\nu$ of the simulation by fitting the exponential analytical solution in \cref{eq:swd:analytica-solution} to the measured values. In case of the oscillating density decay, only the peaks get fitted. \cref{fig:swd:viscosity} shows the results of this for different relaxation rates $\omega$ and compares it to the expected analytical prediction. This expected viscosity is determined through a direct relation to the relaxation rate $\omega$ as given in \cref{eq:omega-to-viscosity}, where $c_s=\sqrt{\frac{1}{3}}$ is the speed of sound in lattice dimensions:
+The measured decay can be used to determine the kinematic viscosity $\nu$ of the simulation by fitting the exponential analytical solution in \cref{eq:swd:analytica-solution} to the measured values. In case of the oscillating density decay, only the peaks get fitted. \cref{fig:swd:viscosity} shows the results of this for different relaxation rates $\omega$ and compares it to the expected analytical prediction. This expected viscosity is determined through a direct relation to the relaxation rate $\omega$ as given in \cref{eq:omega-to-viscosity}, where $c_s=\sqrt{\frac{1}{3}}$ is the speed of sound in lattice dimensions \cite{timm2016lattice}:
 \begin{equation}
     \nu = c_s^2 \left(\frac{1}{\omega} - \frac{1}{2}\right)
     \label{eq:omega-to-viscosity}
@@ -104,15 +104,15 @@ Overall, the shear wave decay yielded the expected results as shown in \cref{fig
 
 \subsection{Couette Flow}
 
-Couette flow is the flow in a viscous fluid between two boundaries of which one is rigid and one is moving with velocity $U_w$. In the considered case the rigid wall is at the bottom boundary, the moving wall is at the top ($y=0$) and moves to the right as illustrated in \cref{fig:concept:couette}. One the inlet (left) and outlet (right), \glsentrylongpl{PBC} are applied.
+Couette flow is the flow in a viscous fluid between two boundaries of which one is rigid and one is moving with velocity $U_w$. In the considered case, the rigid wall is at the bottom boundary, the moving wall is at the top ($y=0$) and moves to the right as illustrated in \cref{fig:concept:couette}. One the inlet (left) and outlet (right), \glsentrylongpl{PBC} are applied.
 
-The moving wall induces a flow that propagates through the fluid due to the viscosity. In the steady state, a linear velocity in $x-direction$ should be obtained for which an analytical solution is given by:
+The moving wall induces a flow that propagates through the fluid due to the viscosity. In the steady state, a linear velocity in $x$-direction should be obtained for which an analytical solution is given by:
 \begin{equation}
     u_x(y) = \left(1-\frac{y}{L_y}\right) U_w
     \label{eq:couette:analytical-solution}
 \end{equation}
 
-\cref{fig:couette} shows the results of the Couette flow experiment and that both the velocity field and profile evolve as expected. In the beginning the velocity profile has the highest values at the moving wall. Over time, the flow propagates to the bottom and eventually converges to the analytical solution.
+\cref{fig:couette} shows the results of the Couette flow experiment and that both the velocity field and profile evolve as expected. In the beginning, the velocity profile has the highest values at the moving wall. Over time, the flow propagates to the bottom and eventually converges to the analytical solution.
 
 Therefore, the obtained results validate the implementation of the moving wall boundary condition.
 
@@ -171,12 +171,12 @@ Therefore, the obtained results validate the implementation of the moving wall b
 
 \subsection{Poiseuille Flow}
 
-Poiseuille flow is the flow between two rigid walls as illustrated in \cref{fig:concept:poiseuille}. The flow is induced by a constant pressure gradient $\frac{dp}{dx}$ between the inlet and outlet. In the considered setting, the rigid walls are at the top and bottom boundaries, inlet (left) and outlet (right) are implemented using \glspl{PBC} with a pressure gradient. Instead of a pressure variation $\Delta p$ between inlet and outlet, a density variation $\Delta \rho$ is applied, since pressure is directly related to density through the ideal gas equation of state:
+Poiseuille flow is the flow between two rigid walls as illustrated in \cref{fig:concept:poiseuille}. The flow is induced by a constant pressure gradient $\frac{dp}{dx}$ between the inlet and outlet. In the considered setting, the rigid walls are at the top and bottom boundaries and inlet (left) and outlet (right) are implemented using \glspl{PBC} with a pressure gradient. Instead of a pressure variation $\Delta p$ between inlet and outlet, a density variation $\Delta \rho$ is applied, since pressure is directly related to density through the ideal gas equation of state \cite{timm2016lattice}:
 \begin{equation}
     p = c_s^2 \rho
     \label{eq:pressure-density-relation}
 \end{equation}
-In the steady state, a parabolic velocity profile should be obtained, for which the analytical solution is given by:
+In the steady state, a parabolic velocity profile should be obtained, for which the analytical solution is given by \cite{timm2016lattice}:
 \begin{equation}
     u_x(y) = - \frac{1}{2\rho\nu} \frac{dp}{dx} y (Y-y)
     \label{eq:poiseuille:analytical-solution}
@@ -210,14 +210,14 @@ In the steady state, a parabolic velocity profile should be obtained, for which 
 
 \subsection{Lid-Driven Cavity}
 
-The lid-driven cavity is a well-known benchmark for fluid simulations. It consists of a square cavity with three rigid and one moving wall, the sliding lid. In the considered setting, the lid is located at the top boundary and moves to the right with velocity $U_w$. The sliding lid induces turbulences in the cavity, which are characterized by the Reynolds number $Re$, a dimensionless number which expresses the ratio between the inertial terms and the viscous ones and helps to predict flow patterns:
+The lid-driven cavity is a well-known benchmark for fluid simulations \cite{mohamad2019}. It consists of a square cavity with three rigid walls and one moving wall, the sliding lid. In the considered setting, the lid is located at the top boundary and moves to the right with velocity $U_w$. The sliding lid induces turbulences in the cavity, characterized by the Reynolds number $Re$, a dimensionless number which expresses the ratio between the inertial terms and the viscous ones and helps to predict flow patterns:
 \begin{equation}
     \label{eq:reynolds-number}
     Re = \frac{Lu}{\nu}
 \end{equation}
-In this equation $L$ is a characteristic length, which in case of a square cavity is simply the domain size $L=L_x=L_y$, and $u$ corresponds to the wall velocity $U_w$ and.
+In this equation $L$ is a characteristic length, which in case of a square cavity is simply the domain size $L=L_x=L_y$, and $u$ corresponds to the wall velocity $U_w$.
 
-\cref{fig:lid:streamplots} shows the steady-state velocity fields of the lid-driven cavity experiment for different Reynolds numbers and viscosity values. It demonstrates, that for the same Reynolds number, the resulting flow is almost the same, despite differences in the viscosity. For example the eddy in the bottom-left corner gets more distinct with higher Reynolds numbers. A video of the time evolution of the velocity field is available in the code repository\footnote{\therepository}.
+\cref{fig:lid:streamplots} shows the steady-state velocity fields of the lid-driven cavity experiment for different Reynolds numbers and viscosity values. It demonstrates that for the same Reynolds number, the resulting flow is almost the same, despite differences in the viscosity. For example the eddy in the bottom-left corner gets more distinct with higher Reynolds numbers. A video of the time evolution of the velocity field is available in the code repository\footnote{\therepository}.
 
 \begin{figure}[htp]
     \includegraphics[width=\linewidth]{m6_streamplots.png}
@@ -225,18 +225,18 @@ In this equation $L$ is a characteristic length, which in case of a square cavit
     \label{fig:lid:streamplots}
 \end{figure}
 
-Note that the plots in \cref{fig:lid:streamplots} were computed without parallelization. For a couple of cases, the resulting velocity fields of both the serial and the parallel implementation were compared. It could be observed, that both were identical. Therefore, it can be concluded, that the parallelization is implemented correctly.
+Note that the plots in \cref{fig:lid:streamplots} were computed without parallelization. For a couple of cases, the resulting velocity fields of both the serial and the parallel implementation were compared. It could be observed that both were identical. Based on this, the conclusion can be drawn that the parallelization is implemented correctly.
 
 \subsection{Scaling}
 
-In order to test, how good the parallel implementation scales, the lid-driven cavity experiment was run multiple for different lattice sizes and different number of MPI processes. The scaling test were run on the bwUniCluster 2.0\footnote{\href{https://wiki.bwhpc.de/e/Category:BwUniCluster\_2.0}{https://wiki.bwhpc.de/e/Category:BwUniCluster\_2.0}}. To compare the result, the number of \glsentryfull{MLUPS} is used as measure. It is calculated from the lattice dimensions $L_x \times L_y$, the total number of simulation steps $N_{steps}$ and the elapsed time $T$ as given by the following equation:
+In order to test, how good the parallel implementation scales, the lid-driven cavity experiment was run multiple for different lattice sizes and different number of MPI processes. The scaling test were run on the bwUniCluster 2.0\footnote{\href{https://wiki.bwhpc.de/e/Category:BwUniCluster\_2.0}{https://wiki.bwhpc.de/e/Category:BwUniCluster\_2.0}}. To compare the result, the number of \glsentryfull{MLUPS} is used as unit. It is calculated from the lattice dimensions $L_x \times L_y$, the total number of simulation steps $N_{steps}$ and the elapsed time $T$ as given by the following equation:
 
 \begin{equation}
     \label{eq:mlups}
     \text{MLUPS} = \frac{L_x \cdot L_y \cdot N_{steps}}{10^6 \cdot T}
 \end{equation}
 
-The results are displayed in \cref{fig:lid:scaling}. It can be observed, that for a few processes it scales linearly. This diminishes as the number of processes grows and therefore the size of each subdomain shrinks. An intuition for the observed behavior is given by Amdahl's Law \cite{amdahl}. The non-optimal speedup is caused by the necessary synchronization between processes imposed by the communication step. Decreasing of the speedup starts when the perimeter-to-area ratio grows large enough, roughly $>0.1$, and hence the additional cost of the communication eventually outweighs the benefit gained by the parallelization.
+The results are displayed in \cref{fig:lid:scaling}. It can be observed that for a few processes, the implementation scales linearly. This diminishes as the number of processes grows and therefore the size of each subdomain shrinks. An intuition for the observed behavior is given by Amdahl's Law \cite{amdahl}. The non-optimal speedup is caused by the necessary synchronization between processes imposed by the communication step. Decreasing of the speedup starts when the perimeter-to-area ratio grows large enough, roughly $>0.1$, and hence the additional cost of the communication eventually outweighs the benefit gained by the parallelization.
 
 \begin{figure}[ht!]
     \centering
