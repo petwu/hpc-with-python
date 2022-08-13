@@ -6,20 +6,27 @@ with Python_ at the University of Freiburg in the summer semester 2022.
 
 **Contents**
 
+- [Report](#report)
 - [Animation: Lid-Driven Cavity](#animation-lid-driven-cavity)
 - [Setup](#setup)
 - [Scaling Tests with Lid-Driven Cavity](#scaling-tests-with-lid-driven-cavity)
 - [Milestones](#milestones)
-- [Report](#report)
+- [Report](#report-1)
 - [Reproducibility](#reproducibility)
 - [Tests](#tests)
+
+## Report
+
+The final report can be found here: [report/report.pdf](report/report.pdf)
 
 ## Animation: Lid-Driven Cavity
 
 [m6_x300_y300_v0.03_Re1000.webm](https://user-images.githubusercontent.com/39537032/182847788-903f7f5b-e381-4c12-977a-41c67552431a.mp4)
 
 <details>
+
 The versioned video is located under [report/media/m6_x300_y300_v0.03_Re1000.webm](report/media/m6_x300_y300_v0.03_Re1000.webm).
+
 </details>
 
 ## Setup
@@ -60,17 +67,22 @@ The final report is located at [report/main.pdf](main.report/main.pdf).
 
 Building the report:
 ```sh
-$ cd report
-$ make report
+cd report
+make report
 ```
+
+This requires some LaTeX distribution (e.g. [TeX Live](https://tug.org/texlive/)) to be installed that includes `lualatex` and `latexmk`.
 
 ## Reproducibility
 
-All plots with results from experiments from the report can be reproduced:
+All plots with results from experiments in the report can be reproduced:
+```sh
+cd report
+make plots
 ```
-$ cd report
-$ make plots
-```
+
+The results of the scaling tests are versioned here: [report/scaling/scaling.tar.gz](report/scaling/scaling.tar.gz).  
+In order to reproduce them, see [report/scaling/README.md](report/scaling/README.md).
 
 ## Tests
 
